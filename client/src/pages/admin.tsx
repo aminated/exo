@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Plus, Pencil, Trash2, Package, Pen } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock } from "lucide-react";
 import type { Product, BlogPost } from "@shared/schema";
 
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
@@ -228,6 +228,8 @@ function PostForm({
     slug: post?.slug || "",
     content: post?.content || "",
     excerpt: post?.excerpt || "",
+    isLocked: post?.isLocked || false,
+    lockPassword: post?.lockPassword || "",
   });
 
   const mutation = useMutation({
@@ -235,6 +237,7 @@ function PostForm({
       const body = {
         ...data,
         excerpt: data.excerpt || null,
+        lockPassword: data.isLocked ? data.lockPassword : null,
       };
       if (post) {
         await apiRequest("PATCH", `/api/admin/posts/${post.id}`, body);
@@ -309,6 +312,30 @@ function PostForm({
           className="border-dotted"
           data-testid="input-post-content"
         />
+      </div>
+      <div className="border border-dotted border-border rounded-md p-3 space-y-3">
+        <label className="flex items-center gap-2 cursor-pointer text-sm">
+          <input
+            type="checkbox"
+            checked={form.isLocked}
+            onChange={(e) => setForm((prev) => ({ ...prev, isLocked: e.target.checked }))}
+            className="accent-amber-500"
+            data-testid="input-post-locked"
+          />
+          <span className="text-muted-foreground">private entry (password-locked)</span>
+        </label>
+        {form.isLocked && (
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">unlock password</label>
+            <Input
+              value={form.lockPassword}
+              onChange={(e) => setForm((prev) => ({ ...prev, lockPassword: e.target.value }))}
+              placeholder="password to unlock this post"
+              className="border-dotted"
+              data-testid="input-post-lock-password"
+            />
+          </div>
+        )}
       </div>
       <div className="flex gap-2">
         <Button
@@ -504,7 +531,8 @@ function PostsManager() {
               data-testid={`admin-post-${post.id}`}
             >
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-amber-400 truncate">
+                <div className="text-sm font-medium text-amber-400 truncate flex items-center gap-1.5">
+                  {post.isLocked && <Lock className="h-3 w-3 text-amber-500/70 flex-shrink-0" />}
                   {post.title}
                 </div>
                 <div className="text-xs text-muted-foreground truncate">

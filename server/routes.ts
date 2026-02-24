@@ -39,7 +39,8 @@ export async function registerRoutes(
 
   app.get("/api/posts", async (_req, res) => {
     const posts = await storage.getBlogPosts();
-    res.json(posts);
+    const sanitized = posts.map(({ lockPassword, ...rest }) => rest);
+    res.json(sanitized);
   });
 
   app.get("/api/posts/:slug", async (req, res) => {
@@ -47,7 +48,28 @@ export async function registerRoutes(
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
     }
-    res.json(post);
+    const { lockPassword, ...rest } = post;
+    if (post.isLocked) {
+      return res.json({ ...rest, content: "" });
+    }
+    res.json(rest);
+  });
+
+  app.post("/api/posts/:slug/unlock", async (req, res) => {
+    const post = await storage.getBlogPostBySlug(req.params.slug);
+    if (!post) {
+      return res.status(404).json({ message: "Post not found" });
+    }
+    if (!post.isLocked) {
+      const { lockPassword, ...rest } = post;
+      return res.json(rest);
+    }
+    const { password } = req.body;
+    if (!password || password !== post.lockPassword) {
+      return res.status(401).json({ message: "incorrect password" });
+    }
+    const { lockPassword, ...rest } = post;
+    res.json(rest);
   });
 
   app.post("/api/admin/login", (req, res) => {
@@ -116,6 +138,9 @@ export async function registerRoutes(
     const parsed = insertBlogPostSchema.safeParse(req.body);
     if (!parsed.success) {
       return res.status(400).json({ message: "Invalid post data", errors: parsed.error.flatten() });
+    }
+    if (parsed.data.isLocked && !parsed.data.lockPassword) {
+      return res.status(400).json({ message: "Locked posts require a password" });
     }
     const post = await storage.createBlogPost(parsed.data);
     res.status(201).json(post);

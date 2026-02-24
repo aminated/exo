@@ -1,6 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { Calendar } from "lucide-react";
+import { Calendar, Lock } from "lucide-react";
 import type { BlogPost } from "@shared/schema";
 
 export default function Musings() {
@@ -42,6 +42,12 @@ export default function Musings() {
                 className="border border-dotted border-border rounded-md p-5 bg-card/40 hover:bg-card/60 hover:border-amber-500/30 transition-all cursor-pointer group"
                 data-testid={`card-post-${post.id}`}
               >
+                {post.isLocked && (
+                  <div className="flex items-center gap-1.5 text-xs text-amber-500/70 mb-2">
+                    <Lock className="h-3 w-3" />
+                    <span>private entry</span>
+                  </div>
+                )}
                 <h3 className="text-base font-semibold text-amber-400 group-hover:text-amber-300 transition-colors mb-2">
                   {post.title}
                 </h3>

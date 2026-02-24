@@ -27,7 +27,8 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - Password-based auth using express-session with PostgreSQL session store
 - ADMIN_PASSWORD env var required for login (no hardcoded fallback)
 - CRUD for products: create, edit name/slug/concentration/type/price/description/inStock, delete
-- CRUD for blog posts: create, edit title/slug/content/excerpt, delete
+- CRUD for blog posts: create, edit title/slug/content/excerpt/isLocked/lockPassword, delete
+- Locked posts: admin can mark posts as "private entry" with a password; public API hides content until correct password is submitted via POST /api/posts/:slug/unlock
 
 ## BitCart Integration
 - Checkout creates an order in the `orders` table, then calls BitCart API to create an invoice
@@ -36,7 +37,7 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 
 ## Data Models
 - `products` - name, slug, concentration, type, unitPrice, description, inStock
-- `blogPosts` - title, slug, content, excerpt, publishedAt
+- `blogPosts` - title, slug, content, excerpt, isLocked, lockPassword, publishedAt
 - `orders` - items (JSON), totalPrice, paymentMethod, bitcartInvoiceId, status, createdAt
 
 ## Project Structure

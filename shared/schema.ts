@@ -26,6 +26,8 @@ export const blogPosts = pgTable("blog_posts", {
   slug: text("slug").notNull().unique(),
   content: text("content").notNull(),
   excerpt: text("excerpt"),
+  isLocked: boolean("is_locked").notNull().default(false),
+  lockPassword: text("lock_password"),
   publishedAt: timestamp("published_at").defaultNow(),
 });
 

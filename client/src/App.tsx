@@ -53,13 +53,13 @@ function Layout({ children }: { children: React.ReactNode }) {
             </h1>
           </Link>
           <nav className="flex items-center gap-2" data-testid="nav-main">
-            <NavLink href="/">
-              <Package className="h-3.5 w-3.5" />
-              products
-            </NavLink>
-            <NavLink href="/musings" matchPrefix="/musings">
+            <NavLink href="/" matchPrefix="/musings">
               <Pen className="h-3.5 w-3.5" />
               musings
+            </NavLink>
+            <NavLink href="/products" matchPrefix="/product">
+              <Package className="h-3.5 w-3.5" />
+              products
             </NavLink>
           </nav>
         </div>
@@ -82,10 +82,10 @@ function Router() {
   return (
     <Layout>
       <Switch>
-        <Route path="/" component={Home} />
-        <Route path="/product/:slug" component={ProductDetail} />
-        <Route path="/musings" component={Musings} />
+        <Route path="/" component={Musings} />
         <Route path="/musings/:slug" component={PostDetail} />
+        <Route path="/products" component={Home} />
+        <Route path="/product/:slug" component={ProductDetail} />
         <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>

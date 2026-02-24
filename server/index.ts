@@ -60,6 +60,32 @@ app.use((req, res, next) => {
 });
 
 (async () => {
+  const { pool } = await import("./db");
+  const { seedDatabase } = await import("./seed");
+  
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS products (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      concentration TEXT,
+      type TEXT,
+      unit_price DECIMAL(10,2) NOT NULL,
+      description TEXT,
+      in_stock BOOLEAN NOT NULL DEFAULT true
+    );
+    CREATE TABLE IF NOT EXISTS blog_posts (
+      id SERIAL PRIMARY KEY,
+      title TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      content TEXT NOT NULL,
+      excerpt TEXT,
+      published_at TIMESTAMP DEFAULT NOW()
+    );
+  `);
+  
+  await seedDatabase();
+  
   await registerRoutes(httpServer, app);
 
   app.use((err: any, _req: Request, res: Response, next: NextFunction) => {

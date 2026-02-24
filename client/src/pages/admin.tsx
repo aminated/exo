@@ -373,7 +373,7 @@ function ProductsManager() {
         <Button
           size="sm"
           onClick={() => setCreating(true)}
-          className="gap-1.5 bg-white text-black hover:bg-neutral-200 border border-dotted border-white/40"
+          className="gap-1.5 bg-amber-500 text-black hover:bg-amber-400 border border-dotted border-amber-400/40"
           data-testid="button-add-product"
         >
           <Plus className="h-3.5 w-3.5" />

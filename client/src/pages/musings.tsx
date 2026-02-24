@@ -11,12 +11,12 @@ export default function Musings() {
   return (
     <div className="w-full max-w-3xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-lg font-bold tracking-wider uppercase mb-1" data-testid="text-musings-heading">
-          Musings
+        <h2 className="text-lg font-bold tracking-wider mb-1" data-testid="text-musings-heading">
+          musings
         </h2>
         <div className="glow-line w-full mb-2" />
         <p className="text-sm text-muted-foreground">
-          Thoughts, notes, and things worth sharing.
+          thoughts, notes, and things worth sharing.
         </p>
       </div>
 
@@ -39,10 +39,10 @@ export default function Musings() {
               className="block"
             >
               <article
-                className="border border-border rounded-md p-5 bg-card/40 hover:bg-card/60 hover:border-purple-500/30 transition-all cursor-pointer group"
+                className="border border-border rounded-md p-5 bg-card/40 hover:bg-card/60 hover:border-amber-600/30 transition-all cursor-pointer group"
                 data-testid={`card-post-${post.id}`}
               >
-                <h3 className="text-base font-semibold text-purple-200 group-hover:text-purple-100 transition-colors mb-2">
+                <h3 className="text-base font-semibold text-amber-800 group-hover:text-amber-700 transition-colors mb-2">
                   {post.title}
                 </h3>
                 {post.excerpt && (
@@ -58,7 +58,7 @@ export default function Musings() {
                         month: "long",
                         day: "numeric",
                       })
-                    : "Draft"}
+                    : "draft"}
                 </div>
               </article>
             </Link>
@@ -66,7 +66,7 @@ export default function Musings() {
         </div>
       ) : (
         <div className="text-center py-16 text-muted-foreground" data-testid="text-no-posts">
-          <p>No musings yet. Check back soon.</p>
+          <p>no musings yet. check back soon.</p>
         </div>
       )}
     </div>

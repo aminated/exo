@@ -27,9 +27,9 @@ function NavLink({
   return (
     <Link
       href={href}
-      className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs tracking-wider uppercase transition-colors ${
+      className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs tracking-wider transition-colors ${
         isActive
-          ? "bg-purple-800/40 text-purple-200 border border-purple-500/30"
+          ? "bg-amber-700/15 text-amber-800 border border-amber-600/30"
           : "text-muted-foreground hover:text-foreground border border-transparent"
       }`}
     >
@@ -45,20 +45,20 @@ function Layout({ children }: { children: React.ReactNode }) {
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <Link href="/">
             <h1
-              className="text-base font-bold tracking-widest uppercase text-purple-300 hover:text-purple-200 transition-colors cursor-pointer"
+              className="text-base font-bold tracking-widest text-amber-800 hover:text-amber-700 transition-colors cursor-pointer"
               data-testid="link-logo"
             >
-              Supplements
+              supplements
             </h1>
           </Link>
           <nav className="flex items-center gap-2" data-testid="nav-main">
             <NavLink href="/">
               <Package className="h-3.5 w-3.5" />
-              Products
+              products
             </NavLink>
             <NavLink href="/musings" matchPrefix="/musings">
               <Pen className="h-3.5 w-3.5" />
-              Musings
+              musings
             </NavLink>
           </nav>
         </div>
@@ -70,7 +70,7 @@ function Layout({ children }: { children: React.ReactNode }) {
 
       <footer className="border-t border-border px-4 sm:px-6 py-4">
         <div className="max-w-4xl mx-auto text-center text-xs text-muted-foreground/50">
-          All transactions are final. Ship worldwide.
+          all transactions are final. ship worldwide.
         </div>
       </footer>
     </div>

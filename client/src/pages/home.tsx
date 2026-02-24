@@ -16,8 +16,8 @@ export default function Home() {
   return (
     <div className="w-full max-w-4xl mx-auto">
       <div className="mb-8">
-        <h2 className="text-lg font-bold tracking-wider uppercase mb-1" data-testid="text-products-heading">
-          Products
+        <h2 className="text-lg font-bold tracking-wider mb-1" data-testid="text-products-heading">
+          products
         </h2>
         <div className="glow-line w-full mb-6" />
       </div>
@@ -36,20 +36,20 @@ export default function Home() {
           <table className="w-full text-sm" data-testid="table-products">
             <thead>
               <tr className="border-b border-border bg-card/60">
-                <th className="text-left p-3 font-semibold tracking-wider uppercase text-xs text-muted-foreground">
-                  Product
+                <th className="text-left p-3 font-semibold tracking-wider text-xs text-muted-foreground">
+                  product
                 </th>
-                <th className="text-left p-3 font-semibold tracking-wider uppercase text-xs text-muted-foreground hidden sm:table-cell">
-                  Concentration
+                <th className="text-left p-3 font-semibold tracking-wider text-xs text-muted-foreground hidden sm:table-cell">
+                  concentration
                 </th>
-                <th className="text-left p-3 font-semibold tracking-wider uppercase text-xs text-muted-foreground hidden sm:table-cell">
-                  Type
+                <th className="text-left p-3 font-semibold tracking-wider text-xs text-muted-foreground hidden sm:table-cell">
+                  type
                 </th>
-                <th className="text-left p-3 font-semibold tracking-wider uppercase text-xs text-muted-foreground">
-                  Unit Price
+                <th className="text-left p-3 font-semibold tracking-wider text-xs text-muted-foreground">
+                  unit price
                 </th>
-                <th className="text-center p-3 font-semibold tracking-wider uppercase text-xs text-muted-foreground">
-                  Quantity
+                <th className="text-center p-3 font-semibold tracking-wider text-xs text-muted-foreground">
+                  quantity
                 </th>
               </tr>
             </thead>
@@ -65,7 +65,7 @@ export default function Home() {
                     <td className="p-3">
                       <Link
                         href={`/product/${product.slug}`}
-                        className="text-purple-300 hover:text-purple-200 underline underline-offset-2 decoration-purple-500/40 hover:decoration-purple-400/60 transition-colors font-medium"
+                        className="text-amber-800 hover:text-amber-700 underline underline-offset-2 decoration-amber-600/40 hover:decoration-amber-500/60 transition-colors font-medium"
                         data-testid={`link-product-${product.id}`}
                       >
                         {product.name}
@@ -76,7 +76,7 @@ export default function Home() {
                         product.concentration || "-"
                       ) : (
                         <span className="text-destructive font-bold tracking-wider text-xs">
-                          OUT OF STOCK
+                          out of stock
                         </span>
                       )}
                     </td>
@@ -147,15 +147,15 @@ function PaymentSection({
     : 0;
 
   const paymentMethods = [
-    { id: "btc", label: "Bitcoin (BTC)" },
-    { id: "ltc", label: "Litecoin (LTC)" },
-    { id: "xmr", label: "Monero (XMR)" },
+    { id: "btc", label: "bitcoin (btc)" },
+    { id: "ltc", label: "litecoin (ltc)" },
+    { id: "xmr", label: "monero (xmr)" },
   ];
 
   return (
     <div className="mt-8 border border-border rounded-md p-5" data-testid="section-payment">
-      <h3 className="text-sm font-bold tracking-wider uppercase mb-4">
-        Select Payment Method:
+      <h3 className="text-sm font-bold tracking-wider mb-4">
+        select payment method:
       </h3>
 
       <div className="flex flex-wrap gap-2 mb-4">
@@ -165,8 +165,8 @@ function PaymentSection({
             onClick={() => setSelectedPayment(pm.id)}
             className={`px-5 py-2.5 rounded-md text-sm font-mono tracking-wide transition-all border ${
               selectedPayment === pm.id
-                ? "bg-purple-800/60 border-purple-500/60 text-purple-100"
-                : "bg-card border-border text-muted-foreground hover:border-purple-500/30"
+                ? "bg-amber-700/15 border-amber-600/50 text-amber-900"
+                : "bg-card border-border text-muted-foreground hover:border-amber-600/30"
             }`}
             data-testid={`button-payment-${pm.id}`}
           >
@@ -176,16 +176,16 @@ function PaymentSection({
       </div>
 
       <p className="text-xs text-muted-foreground leading-relaxed mb-5">
-        <span className="text-purple-400 font-semibold">Payment Processing:</span>{" "}
-        Bitcoin and Litecoin payments are marked as paid automatically after 1
-        confirmation. Monero payments are marked as paid within 72 hours, or
-        instantly upon entering the TXID.
+        <span className="text-amber-800 font-semibold">payment processing:</span>{" "}
+        bitcoin and litecoin payments are marked as paid automatically after 1
+        confirmation. monero payments are marked as paid within 72 hours, or
+        instantly upon entering the txid.
       </p>
 
       {totalItems > 0 && (
         <div className="border-t border-border pt-4 flex items-center justify-between gap-4 flex-wrap">
           <div className="text-sm">
-            <span className="text-muted-foreground">Total:</span>{" "}
+            <span className="text-muted-foreground">total:</span>{" "}
             <span className="font-bold font-mono text-lg">
               ${totalPrice.toFixed(2)}
             </span>{" "}
@@ -199,7 +199,7 @@ function PaymentSection({
             data-testid="button-checkout"
           >
             <ShoppingCart className="h-4 w-4" />
-            Checkout with {paymentMethods.find((p) => p.id === selectedPayment)?.label}
+            checkout with {paymentMethods.find((p) => p.id === selectedPayment)?.label}
           </Button>
         </div>
       )}

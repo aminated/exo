@@ -25,11 +25,11 @@ export default function ProductDetail() {
   if (!product) {
     return (
       <div className="w-full max-w-3xl mx-auto text-center py-16">
-        <p className="text-muted-foreground mb-4">Product not found.</p>
+        <p className="text-muted-foreground mb-4">product not found.</p>
         <Link href="/">
           <Button variant="secondary" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Back to products
+            back to products
           </Button>
         </Link>
       </div>
@@ -41,12 +41,12 @@ export default function ProductDetail() {
       <Link href="/">
         <Button variant="ghost" className="gap-2 mb-6 -ml-2 text-muted-foreground" data-testid="button-back">
           <ArrowLeft className="h-4 w-4" />
-          Back to products
+          back to products
         </Button>
       </Link>
 
       <h1
-        className="text-2xl font-bold tracking-wide mb-2 text-purple-200"
+        className="text-2xl font-bold tracking-wide mb-2 text-amber-800"
         data-testid="text-product-name"
       >
         {product.name}
@@ -56,27 +56,27 @@ export default function ProductDetail() {
 
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-8">
         {product.concentration && (
-          <InfoCard label="Concentration" value={product.concentration} />
+          <InfoCard label="concentration" value={product.concentration} />
         )}
-        {product.type && <InfoCard label="Type" value={product.type} />}
+        {product.type && <InfoCard label="type" value={product.type} />}
         <InfoCard
-          label="Price"
+          label="price"
           value={`$${Number(product.unitPrice).toFixed(2)}`}
         />
         <InfoCard
-          label="Status"
-          value={product.inStock ? "In Stock" : "Out of Stock"}
-          valueClass={product.inStock ? "text-green-400" : "text-destructive"}
+          label="status"
+          value={product.inStock ? "in stock" : "out of stock"}
+          valueClass={product.inStock ? "text-green-700" : "text-destructive"}
         />
       </div>
 
       {product.description && (
         <div className="border border-border rounded-md p-5 bg-card/40">
-          <h2 className="text-xs font-semibold tracking-wider uppercase text-muted-foreground mb-3">
-            Description
+          <h2 className="text-xs font-semibold tracking-wider text-muted-foreground mb-3">
+            description
           </h2>
           <div
-            className="prose prose-invert prose-purple max-w-none text-sm leading-relaxed text-foreground/90"
+            className="prose prose-stone max-w-none text-sm leading-relaxed text-foreground/90"
             data-testid="text-product-description"
           >
             {product.description.split("\n").map((paragraph, i) => (
@@ -102,7 +102,7 @@ function InfoCard({
 }) {
   return (
     <div className="border border-border rounded-md p-3 bg-card/40">
-      <div className="text-xs text-muted-foreground tracking-wider uppercase mb-1">
+      <div className="text-xs text-muted-foreground tracking-wider mb-1">
         {label}
       </div>
       <div className={`text-sm font-medium ${valueClass}`}>{value}</div>

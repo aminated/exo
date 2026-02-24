@@ -25,11 +25,11 @@ export default function PostDetail() {
   if (!post) {
     return (
       <div className="w-full max-w-3xl mx-auto text-center py-16">
-        <p className="text-muted-foreground mb-4">Post not found.</p>
+        <p className="text-muted-foreground mb-4">post not found.</p>
         <Link href="/musings">
           <Button variant="secondary" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
-            Back to musings
+            back to musings
           </Button>
         </Link>
       </div>
@@ -41,12 +41,12 @@ export default function PostDetail() {
       <Link href="/musings">
         <Button variant="ghost" className="gap-2 mb-6 -ml-2 text-muted-foreground" data-testid="button-back-musings">
           <ArrowLeft className="h-4 w-4" />
-          Back to musings
+          back to musings
         </Button>
       </Link>
 
       <h1
-        className="text-2xl font-bold tracking-wide mb-3 text-purple-200"
+        className="text-2xl font-bold tracking-wide mb-3 text-amber-800"
         data-testid="text-post-title"
       >
         {post.title}
@@ -60,13 +60,13 @@ export default function PostDetail() {
               month: "long",
               day: "numeric",
             })
-          : "Draft"}
+          : "draft"}
       </div>
 
       <div className="glow-line w-full mb-6" />
 
       <div
-        className="prose prose-invert prose-purple max-w-none text-sm leading-relaxed"
+        className="prose prose-stone max-w-none text-sm leading-relaxed"
         data-testid="text-post-content"
       >
         {post.content.split("\n").map((paragraph, i) => (

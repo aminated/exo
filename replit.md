@@ -7,6 +7,8 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - 2026-02-24: Initial build - full-stack supplement shop with products, blog, crypto payments
 - 2026-02-24: Theme updated to black background, bold font, gold/amber accents on dark
 - 2026-02-24: Admin portal added at /admin with product and blog post management
+- 2026-02-24: Musings moved to front page (/), products moved to /products
+- 2026-02-24: BitCart crypto payment integration added (requires BITCART_API_URL, BITCART_API_TOKEN, BITCART_STORE_ID)
 
 ## Architecture
 - **Frontend**: React + Vite + TailwindCSS + shadcn/ui with black background, bold Doto font, gold accents
@@ -15,10 +17,10 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - **State**: TanStack Query for server state, local state for cart
 
 ## Key Pages
-- `/` - Product listing with table, quantity controls, payment method selection
-- `/product/:slug` - Individual product detail page with description
-- `/musings` - Blog post listing
+- `/` - Blog/musings listing (front page)
 - `/musings/:slug` - Individual blog post
+- `/products` - Product listing with table, quantity controls, payment method selection
+- `/product/:slug` - Individual product detail page with description
 - `/admin` - Admin portal (password-protected) for managing products and blog posts
 
 ## Admin Portal
@@ -27,9 +29,15 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - CRUD for products: create, edit name/slug/concentration/type/price/description/inStock, delete
 - CRUD for blog posts: create, edit title/slug/content/excerpt, delete
 
+## BitCart Integration
+- Checkout creates an order in the `orders` table, then calls BitCart API to create an invoice
+- If BitCart is not configured (env vars missing), orders are still saved but no invoice is created
+- Requires: BITCART_API_URL, BITCART_API_TOKEN, BITCART_STORE_ID env vars
+
 ## Data Models
 - `products` - name, slug, concentration, type, unitPrice, description, inStock
 - `blogPosts` - title, slug, content, excerpt, publishedAt
+- `orders` - items (JSON), totalPrice, paymentMethod, bitcartInvoiceId, status, createdAt
 
 ## Project Structure
 - `client/src/pages/` - Page components

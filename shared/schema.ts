@@ -29,6 +29,16 @@ export const blogPosts = pgTable("blog_posts", {
   publishedAt: timestamp("published_at").defaultNow(),
 });
 
+export const orders = pgTable("orders", {
+  id: serial("id").primaryKey(),
+  items: text("items").notNull(),
+  totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
+  paymentMethod: text("payment_method").notNull(),
+  bitcartInvoiceId: text("bitcart_invoice_id"),
+  status: text("status").notNull().default("pending"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 export const insertUserSchema = createInsertSchema(users).pick({
   username: true,
   password: true,
@@ -47,4 +57,11 @@ export type User = typeof users.$inferSelect;
 export type Product = typeof products.$inferSelect;
 export type InsertProduct = z.infer<typeof insertProductSchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
+export const insertOrderSchema = createInsertSchema(orders).omit({
+  id: true,
+  createdAt: true,
+});
+
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
+export type Order = typeof orders.$inferSelect;
+export type InsertOrder = z.infer<typeof insertOrderSchema>;

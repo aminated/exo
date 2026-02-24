@@ -1,8 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, ShoppingCart } from "lucide-react";
+import { Minus, Plus, ShoppingCart, Loader2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
 import { useCart } from "@/lib/cart";
 
@@ -11,7 +13,7 @@ export default function Home() {
     queryKey: ["/api/products"],
   });
 
-  const { cart, addToCart, removeFromCart } = useCart();
+  const { cart, addToCart, removeFromCart, clearCart } = useCart();
 
   return (
     <div className="w-full max-w-4xl mx-auto">
@@ -124,7 +126,7 @@ export default function Home() {
         </div>
       )}
 
-      <PaymentSection cart={cart} products={products} />
+      <PaymentSection cart={cart} products={products} clearCart={clearCart} />
     </div>
   );
 }
@@ -132,11 +134,14 @@ export default function Home() {
 function PaymentSection({
   cart,
   products,
+  clearCart,
 }: {
   cart: Record<number, number>;
   products?: Product[];
+  clearCart: () => void;
 }) {
   const [selectedPayment, setSelectedPayment] = useState<string>("btc");
+  const { toast } = useToast();
 
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
   const totalPrice = products
@@ -145,6 +150,43 @@ function PaymentSection({
         return sum + (product ? Number(product.unitPrice) * qty : 0);
       }, 0)
     : 0;
+
+  const cartItems = products
+    ? Object.entries(cart)
+        .filter(([, qty]) => qty > 0)
+        .map(([id, qty]) => {
+          const product = products.find((p) => p.id === Number(id));
+          return product ? { productId: product.id, name: product.name, quantity: qty, unitPrice: product.unitPrice } : null;
+        })
+        .filter(Boolean)
+    : [];
+
+  const checkoutMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/checkout", {
+        items: cartItems,
+        totalPrice,
+        paymentMethod: selectedPayment,
+      });
+      return await res.json();
+    },
+    onSuccess: (data: { configured: boolean; checkoutUrl?: string; orderId: number; message?: string }) => {
+      if (data.configured && data.checkoutUrl) {
+        clearCart();
+        window.open(data.checkoutUrl, "_blank");
+        toast({ title: `order #${data.orderId} created — redirecting to payment` });
+      } else {
+        clearCart();
+        toast({
+          title: `order #${data.orderId} created`,
+          description: "bitcart is not configured yet. set up your bitcart instance to enable payment processing.",
+        });
+      }
+    },
+    onError: () => {
+      toast({ title: "checkout failed", variant: "destructive" });
+    },
+  });
 
   const paymentMethods = [
     { id: "btc", label: "bitcoin (btc)" },
@@ -196,10 +238,16 @@ function PaymentSection({
           <Button
             variant="default"
             className="gap-2 bg-white text-black hover:bg-neutral-200 border border-dotted border-white/40"
+            disabled={checkoutMutation.isPending}
+            onClick={() => checkoutMutation.mutate()}
             data-testid="button-checkout"
           >
-            <ShoppingCart className="h-4 w-4" />
-            checkout with {paymentMethods.find((p) => p.id === selectedPayment)?.label}
+            {checkoutMutation.isPending ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <ShoppingCart className="h-4 w-4" />
+            )}
+            {checkoutMutation.isPending ? "processing..." : `checkout with ${paymentMethods.find((p) => p.id === selectedPayment)?.label}`}
           </Button>
         </div>
       )}

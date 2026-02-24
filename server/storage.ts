@@ -1,4 +1,4 @@
-import { type Product, type InsertProduct, type BlogPost, type InsertBlogPost, products, blogPosts } from "@shared/schema";
+import { type Product, type InsertProduct, type BlogPost, type InsertBlogPost, type Order, type InsertOrder, products, blogPosts, orders } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -15,6 +15,8 @@ export interface IStorage {
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
   updateBlogPost(id: number, post: Partial<InsertBlogPost>): Promise<BlogPost | undefined>;
   deleteBlogPost(id: number): Promise<boolean>;
+  createOrder(order: InsertOrder): Promise<Order>;
+  updateOrderBitcartId(id: number, bitcartInvoiceId: string): Promise<Order | undefined>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -74,6 +76,16 @@ export class DatabaseStorage implements IStorage {
   async deleteBlogPost(id: number): Promise<boolean> {
     const result = await db.delete(blogPosts).where(eq(blogPosts.id, id)).returning();
     return result.length > 0;
+  }
+
+  async createOrder(order: InsertOrder): Promise<Order> {
+    const [created] = await db.insert(orders).values(order).returning();
+    return created;
+  }
+
+  async updateOrderBitcartId(id: number, bitcartInvoiceId: string): Promise<Order | undefined> {
+    const [updated] = await db.update(orders).set({ bitcartInvoiceId }).where(eq(orders.id, id)).returning();
+    return updated;
   }
 }
 

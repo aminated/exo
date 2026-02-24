@@ -93,7 +93,7 @@ export default function Home() {
                           variant="secondary"
                           onClick={() => removeFromCart(product.id)}
                           disabled={!product.inStock || qty === 0}
-                          className="h-7 w-7 text-xs"
+                          className="h-7 w-7 text-xs border border-dotted border-border"
                           data-testid={`button-minus-${product.id}`}
                         >
                           <Minus className="h-3 w-3" />
@@ -109,7 +109,7 @@ export default function Home() {
                           variant="secondary"
                           onClick={() => addToCart(product.id)}
                           disabled={!product.inStock}
-                          className="h-7 w-7 text-xs"
+                          className="h-7 w-7 text-xs border border-dotted border-border"
                           data-testid={`button-plus-${product.id}`}
                         >
                           <Plus className="h-3 w-3" />
@@ -183,7 +183,7 @@ function PaymentSection({
       </p>
 
       {totalItems > 0 && (
-        <div className="border-t border-dotted border-border pt-4 flex flex-col items-center gap-4">
+        <div className="border-t border-dotted border-border pt-4 pb-2 flex flex-col items-center gap-3">
           <div className="text-sm text-center">
             <span className="text-muted-foreground">total:</span>{" "}
             <span className="font-bold font-mono text-lg">
@@ -195,7 +195,7 @@ function PaymentSection({
           </div>
           <Button
             variant="default"
-            className="gap-2 bg-white text-black hover:bg-neutral-200 border-0"
+            className="gap-2 bg-white text-black hover:bg-neutral-200 border border-dotted border-white/40"
             data-testid="button-checkout"
           >
             <ShoppingCart className="h-4 w-4" />

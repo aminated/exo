@@ -48,7 +48,7 @@ function Layout({ children }: { children: React.ReactNode }) {
               className="text-base font-bold tracking-widest text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
               data-testid="link-logo"
             >
-              supplements
+              "supplements"
             </h1>
           </Link>
           <nav className="flex items-center gap-2" data-testid="nav-main">

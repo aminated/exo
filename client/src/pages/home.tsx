@@ -183,8 +183,8 @@ function PaymentSection({
       </p>
 
       {totalItems > 0 && (
-        <div className="border-t border-dotted border-border pt-4 flex items-center justify-between gap-4 flex-wrap">
-          <div className="text-sm">
+        <div className="border-t border-dotted border-border pt-4 flex flex-col items-center gap-4">
+          <div className="text-sm text-center">
             <span className="text-muted-foreground">total:</span>{" "}
             <span className="font-bold font-mono text-lg">
               ${totalPrice.toFixed(2)}
@@ -195,7 +195,7 @@ function PaymentSection({
           </div>
           <Button
             variant="default"
-            className="gap-2"
+            className="gap-2 bg-white text-black hover:bg-neutral-200 border-0"
             data-testid="button-checkout"
           >
             <ShoppingCart className="h-4 w-4" />

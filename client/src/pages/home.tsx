@@ -135,7 +135,7 @@ export default function Home() {
 
 function ShippingMap() {
   return (
-    <div className="mt-10 border border-dotted border-border rounded-md p-5" data-testid="section-shipping-map">
+    <div className="mt-10 border border-dotted border-border rounded-md p-5 bg-amber-700/15" data-testid="section-shipping-map">
       <h3 className="text-sm font-bold tracking-wider mb-4">we ship to:</h3>
       <div className="w-full overflow-hidden">
         <svg

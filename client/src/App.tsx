@@ -8,6 +8,7 @@ import Home from "@/pages/home";
 import ProductDetail from "@/pages/product-detail";
 import Musings from "@/pages/musings";
 import PostDetail from "@/pages/post-detail";
+import Admin from "@/pages/admin";
 import { Package, Pen } from "lucide-react";
 
 function NavLink({
@@ -85,6 +86,7 @@ function Router() {
         <Route path="/product/:slug" component={ProductDetail} />
         <Route path="/musings" component={Musings} />
         <Route path="/musings/:slug" component={PostDetail} />
+        <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>
     </Layout>

@@ -3,9 +3,10 @@ import { createServer, type Server } from "http";
 import { storage } from "./storage";
 import { insertProductSchema, insertBlogPostSchema } from "@shared/schema";
 
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
-if (!ADMIN_PASSWORD) {
-  console.warn("WARNING: ADMIN_PASSWORD environment variable is not set. Admin login will be disabled.");
+if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
+  console.warn("WARNING: ADMIN_USERNAME or ADMIN_PASSWORD environment variable is not set. Admin login will be disabled.");
 }
 
 function requireAdmin(req: Request, res: Response, next: NextFunction) {
@@ -46,15 +47,15 @@ export async function registerRoutes(
   });
 
   app.post("/api/admin/login", (req, res) => {
-    const { password } = req.body;
-    if (!ADMIN_PASSWORD) {
+    const { username, password } = req.body;
+    if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
       return res.status(503).json({ message: "Admin login is not configured" });
     }
-    if (password === ADMIN_PASSWORD) {
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
       (req.session as any).isAdmin = true;
       res.json({ success: true });
     } else {
-      res.status(401).json({ message: "Invalid password" });
+      res.status(401).json({ message: "Invalid credentials" });
     }
   });
 

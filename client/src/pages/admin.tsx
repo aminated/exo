@@ -9,16 +9,17 @@ import { LogOut, Plus, Pencil, Trash2, Package, Pen } from "lucide-react";
 import type { Product, BlogPost } from "@shared/schema";
 
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const { toast } = useToast();
 
   const loginMutation = useMutation({
-    mutationFn: async (pw: string) => {
-      await apiRequest("POST", "/api/admin/login", { password: pw });
+    mutationFn: async (creds: { username: string; password: string }) => {
+      await apiRequest("POST", "/api/admin/login", creds);
     },
     onSuccess: onLogin,
     onError: () => {
-      toast({ title: "invalid password", variant: "destructive" });
+      toast({ title: "invalid credentials", variant: "destructive" });
     },
   });
 
@@ -30,10 +31,18 @@ function AdminLogin({ onLogin }: { onLogin: () => void }) {
       <form
         onSubmit={(e) => {
           e.preventDefault();
-          loginMutation.mutate(password);
+          loginMutation.mutate({ username, password });
         }}
         className="space-y-4"
       >
+        <Input
+          type="text"
+          placeholder="username"
+          value={username}
+          onChange={(e) => setUsername(e.target.value)}
+          className="border-dotted"
+          data-testid="input-admin-username"
+        />
         <Input
           type="password"
           placeholder="password"

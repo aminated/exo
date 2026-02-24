@@ -48,9 +48,9 @@ function RotatingPill() {
             <rect x="24" y="0" width="24" height="24" />
           </clipPath>
         </defs>
-        <rect x="1" y="1" width="46" height="22" rx="11" stroke="#FFD700" strokeWidth="1.5" strokeDasharray="3 3" />
-        <rect x="1" y="1" width="46" height="22" rx="11" fill="#FFD700" fillOpacity="0.3" clipPath="url(#pill-right-half)" />
-        <line x1="24" y1="3" x2="24" y2="21" stroke="#FFD700" strokeWidth="1" strokeDasharray="2 2" />
+        <rect x="1" y="1" width="46" height="22" rx="11" stroke="#b45309" strokeWidth="1.5" strokeDasharray="3 3" />
+        <rect x="1" y="1" width="46" height="22" rx="11" fill="#b45309" fillOpacity="0.3" clipPath="url(#pill-right-half)" />
+        <line x1="24" y1="3" x2="24" y2="21" stroke="#b45309" strokeWidth="1" strokeDasharray="2 2" />
       </svg>
     </div>
   );

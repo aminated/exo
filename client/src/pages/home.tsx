@@ -127,6 +127,125 @@ export default function Home() {
       )}
 
       <PaymentSection cart={cart} products={products} clearCart={clearCart} />
+      <ShippingMap />
+    </div>
+  );
+}
+
+function ShippingMap() {
+  const dotSize = 1.2;
+  const gap = 4;
+
+  const worldDots: [number, number][] = [];
+  const usDots: [number, number][] = [];
+
+  const isLand = (x: number, y: number): boolean => {
+    const nx = x / 200;
+    const ny = y / 100;
+
+    if (ny < 0.08 || ny > 0.88) return false;
+
+    if (nx >= 0.02 && nx <= 0.05 && ny >= 0.55 && ny <= 0.85) return true;
+    if (nx >= 0.05 && nx <= 0.12 && ny >= 0.62 && ny <= 0.82) return true;
+
+    if (nx >= 0.06 && nx <= 0.25 && ny >= 0.15 && ny <= 0.45) return true;
+    if (nx >= 0.08 && nx <= 0.22 && ny >= 0.12 && ny <= 0.18) return true;
+    if (nx >= 0.10 && nx <= 0.28 && ny >= 0.18 && ny <= 0.50) return true;
+    if (nx >= 0.15 && nx <= 0.22 && ny >= 0.45 && ny <= 0.55) return true;
+
+    if (nx >= 0.20 && nx <= 0.40 && ny >= 0.50 && ny <= 0.72) return true;
+    if (nx >= 0.22 && nx <= 0.38 && ny >= 0.68 && ny <= 0.82) return true;
+    if (nx >= 0.28 && nx <= 0.35 && ny >= 0.80 && ny <= 0.88) return true;
+
+    if (nx >= 0.40 && nx <= 0.55 && ny >= 0.12 && ny <= 0.40) return true;
+    if (nx >= 0.35 && nx <= 0.42 && ny >= 0.15 && ny <= 0.35) return true;
+    if (nx >= 0.42 && nx <= 0.52 && ny >= 0.10 && ny <= 0.20) return true;
+
+    if (nx >= 0.42 && nx <= 0.60 && ny >= 0.38 && ny <= 0.65) return true;
+    if (nx >= 0.38 && nx <= 0.55 && ny >= 0.55 && ny <= 0.78) return true;
+    if (nx >= 0.42 && nx <= 0.48 && ny >= 0.75 && ny <= 0.85) return true;
+
+    if (nx >= 0.55 && nx <= 0.75 && ny >= 0.15 && ny <= 0.55) return true;
+    if (nx >= 0.60 && nx <= 0.80 && ny >= 0.20 && ny <= 0.50) return true;
+    if (nx >= 0.75 && nx <= 0.85 && ny >= 0.30 && ny <= 0.55) return true;
+    if (nx >= 0.80 && nx <= 0.90 && ny >= 0.35 && ny <= 0.55) return true;
+
+    if (nx >= 0.60 && nx <= 0.72 && ny >= 0.50 && ny <= 0.68) return true;
+
+    if (nx >= 0.82 && nx <= 0.98 && ny >= 0.60 && ny <= 0.88) return true;
+    if (nx >= 0.78 && nx <= 0.85 && ny >= 0.65 && ny <= 0.82) return true;
+
+    if (nx >= 0.85 && nx <= 0.98 && ny >= 0.22 && ny <= 0.50) return true;
+    if (nx >= 0.90 && nx <= 0.98 && ny >= 0.15 && ny <= 0.25) return true;
+
+    if (nx >= 0.02 && nx <= 0.08 && ny >= 0.10 && ny <= 0.15) return true;
+
+    return false;
+  };
+
+  const isUS = (x: number, y: number): boolean => {
+    const nx = x / 200;
+    const ny = y / 100;
+
+    if (nx >= 0.06 && nx <= 0.24 && ny >= 0.22 && ny <= 0.42) {
+      if (nx >= 0.06 && nx <= 0.10 && ny >= 0.22 && ny <= 0.36) return true;
+      if (nx >= 0.10 && nx <= 0.24 && ny >= 0.24 && ny <= 0.42) return true;
+      if (nx >= 0.08 && nx <= 0.12 && ny >= 0.20 && ny <= 0.28) return true;
+    }
+
+    if (nx >= 0.02 && nx <= 0.07 && ny >= 0.28 && ny <= 0.38) return true;
+
+    return false;
+  };
+
+  for (let y = 2; y < 100; y += gap) {
+    for (let x = 2; x < 200; x += gap) {
+      if (isLand(x, y)) {
+        if (isUS(x, y)) {
+          usDots.push([x, y]);
+        } else {
+          worldDots.push([x, y]);
+        }
+      }
+    }
+  }
+
+  return (
+    <div className="mt-10 border border-dotted border-border rounded-md p-5" data-testid="section-shipping-map">
+      <h3 className="text-sm font-bold tracking-wider mb-4">we ship to:</h3>
+      <div className="w-full overflow-hidden">
+        <svg
+          viewBox="0 0 200 100"
+          className="w-full h-auto"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          {worldDots.map(([x, y], i) => (
+            <circle
+              key={`w${i}`}
+              cx={x}
+              cy={y}
+              r={dotSize}
+              fill="none"
+              stroke="#b4530940"
+              strokeWidth="0.3"
+              strokeDasharray="0.5 0.5"
+            />
+          ))}
+          {usDots.map(([x, y], i) => (
+            <circle
+              key={`u${i}`}
+              cx={x}
+              cy={y}
+              r={dotSize}
+              fill="#b45309"
+              fillOpacity="0.6"
+              stroke="#b45309"
+              strokeWidth="0.4"
+              strokeDasharray="0.5 0.5"
+            />
+          ))}
+        </svg>
+      </div>
     </div>
   );
 }

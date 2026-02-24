@@ -46,7 +46,7 @@ export default function ProductDetail() {
       </Link>
 
       <h1
-        className="text-2xl font-bold tracking-wide mb-2 text-amber-800"
+        className="text-2xl font-bold tracking-wide mb-2 text-amber-400"
         data-testid="text-product-name"
       >
         {product.name}
@@ -66,7 +66,7 @@ export default function ProductDetail() {
         <InfoCard
           label="status"
           value={product.inStock ? "in stock" : "out of stock"}
-          valueClass={product.inStock ? "text-green-700" : "text-destructive"}
+          valueClass={product.inStock ? "text-green-400" : "text-destructive"}
         />
       </div>
 

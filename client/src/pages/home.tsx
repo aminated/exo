@@ -65,7 +65,7 @@ export default function Home() {
                     <td className="p-3">
                       <Link
                         href={`/product/${product.slug}`}
-                        className="text-amber-800 hover:text-amber-700 underline underline-offset-2 decoration-amber-600/40 hover:decoration-amber-500/60 transition-colors font-medium"
+                        className="text-amber-400 hover:text-amber-300 underline underline-offset-2 decoration-amber-500/40 hover:decoration-amber-400/60 transition-colors font-medium"
                         data-testid={`link-product-${product.id}`}
                       >
                         {product.name}
@@ -165,7 +165,7 @@ function PaymentSection({
             onClick={() => setSelectedPayment(pm.id)}
             className={`px-5 py-2.5 rounded-md text-sm font-mono tracking-wide transition-all border ${
               selectedPayment === pm.id
-                ? "bg-amber-700/15 border-amber-600/50 text-amber-900"
+                ? "bg-amber-700/15 border-amber-600/50 text-amber-400"
                 : "bg-card border-border text-muted-foreground hover:border-amber-600/30"
             }`}
             data-testid={`button-payment-${pm.id}`}
@@ -176,7 +176,7 @@ function PaymentSection({
       </div>
 
       <p className="text-xs text-muted-foreground leading-relaxed mb-5">
-        <span className="text-amber-800 font-semibold">payment processing:</span>{" "}
+        <span className="text-amber-400 font-semibold">payment processing:</span>{" "}
         bitcoin and litecoin payments are marked as paid automatically after 1
         confirmation. monero payments are marked as paid within 72 hours, or
         instantly upon entering the txid.

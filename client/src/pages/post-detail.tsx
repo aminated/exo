@@ -46,7 +46,7 @@ export default function PostDetail() {
       </Link>
 
       <h1
-        className="text-2xl font-bold tracking-wide mb-3 text-amber-800"
+        className="text-2xl font-bold tracking-wide mb-3 text-amber-400"
         data-testid="text-post-title"
       >
         {post.title}

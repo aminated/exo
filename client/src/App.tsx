@@ -29,7 +29,7 @@ function NavLink({
       href={href}
       className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs tracking-wider transition-colors ${
         isActive
-          ? "bg-amber-700/15 text-amber-800 border border-amber-600/30"
+          ? "bg-amber-700/15 text-amber-400 border border-amber-600/30"
           : "text-muted-foreground hover:text-foreground border border-transparent"
       }`}
     >
@@ -45,7 +45,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <Link href="/">
             <h1
-              className="text-base font-bold tracking-widest text-amber-800 hover:text-amber-700 transition-colors cursor-pointer"
+              className="text-base font-bold tracking-widest text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
               data-testid="link-logo"
             >
               supplements

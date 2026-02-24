@@ -39,7 +39,7 @@ export default function Musings() {
               className="block"
             >
               <article
-                className="border border-border rounded-md p-5 bg-card/40 hover:bg-card/60 hover:border-amber-500/30 transition-all cursor-pointer group"
+                className="border border-dotted border-border rounded-md p-5 bg-card/40 hover:bg-card/60 hover:border-amber-500/30 transition-all cursor-pointer group"
                 data-testid={`card-post-${post.id}`}
               >
                 <h3 className="text-base font-semibold text-amber-400 group-hover:text-amber-300 transition-colors mb-2">

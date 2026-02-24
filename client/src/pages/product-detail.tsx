@@ -71,7 +71,7 @@ export default function ProductDetail() {
       </div>
 
       {product.description && (
-        <div className="border border-border rounded-md p-5 bg-card/40">
+        <div className="border border-dotted border-border rounded-md p-5 bg-card/40">
           <h2 className="text-xs font-semibold tracking-wider text-muted-foreground mb-3">
             description
           </h2>
@@ -101,7 +101,7 @@ function InfoCard({
   valueClass?: string;
 }) {
   return (
-    <div className="border border-border rounded-md p-3 bg-card/40">
+    <div className="border border-dotted border-border rounded-md p-3 bg-card/40">
       <div className="text-xs text-muted-foreground tracking-wider mb-1">
         {label}
       </div>

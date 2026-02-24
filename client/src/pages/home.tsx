@@ -32,10 +32,10 @@ export default function Home() {
           ))}
         </div>
       ) : (
-        <div className="border border-border rounded-md overflow-hidden">
+        <div className="border border-dotted border-border rounded-md overflow-hidden">
           <table className="w-full text-sm" data-testid="table-products">
             <thead>
-              <tr className="border-b border-border bg-card/60">
+              <tr className="border-b border-dotted border-border bg-card/60">
                 <th className="text-left p-3 font-semibold tracking-wider text-xs text-muted-foreground">
                   product
                 </th>
@@ -59,7 +59,7 @@ export default function Home() {
                 return (
                   <tr
                     key={product.id}
-                    className="border-b border-border/50 last:border-b-0 transition-colors"
+                    className="border-b border-dotted border-border/50 last:border-b-0 transition-colors"
                     data-testid={`row-product-${product.id}`}
                   >
                     <td className="p-3">
@@ -153,7 +153,7 @@ function PaymentSection({
   ];
 
   return (
-    <div className="mt-8 border border-border rounded-md p-5" data-testid="section-payment">
+    <div className="mt-8 border border-dotted border-border rounded-md p-5" data-testid="section-payment">
       <h3 className="text-sm font-bold tracking-wider mb-4">
         select payment method:
       </h3>
@@ -165,8 +165,8 @@ function PaymentSection({
             onClick={() => setSelectedPayment(pm.id)}
             className={`px-5 py-2.5 rounded-md text-sm font-mono tracking-wide transition-all border ${
               selectedPayment === pm.id
-                ? "bg-amber-700/15 border-amber-600/50 text-amber-400"
-                : "bg-card border-border text-muted-foreground hover:border-amber-600/30"
+                ? "bg-amber-700/15 border-dotted border-amber-600/50 text-amber-400"
+                : "bg-card border-dotted border-border text-muted-foreground hover:border-amber-600/30"
             }`}
             data-testid={`button-payment-${pm.id}`}
           >
@@ -183,7 +183,7 @@ function PaymentSection({
       </p>
 
       {totalItems > 0 && (
-        <div className="border-t border-border pt-4 flex items-center justify-between gap-4 flex-wrap">
+        <div className="border-t border-dotted border-border pt-4 flex items-center justify-between gap-4 flex-wrap">
           <div className="text-sm">
             <span className="text-muted-foreground">total:</span>{" "}
             <span className="font-bold font-mono text-lg">

@@ -29,7 +29,7 @@ function NavLink({
       href={href}
       className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-xs tracking-wider transition-colors ${
         isActive
-          ? "bg-amber-700/15 text-amber-400 border border-amber-600/30"
+          ? "bg-amber-700/15 text-amber-400 border border-dotted border-amber-600/30"
           : "text-muted-foreground hover:text-foreground border border-transparent"
       }`}
     >
@@ -41,7 +41,7 @@ function NavLink({
 function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
-      <header className="border-b border-border px-4 sm:px-6 py-4">
+      <header className="border-b border-dotted border-border px-4 sm:px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <Link href="/">
             <h1
@@ -68,7 +68,7 @@ function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      <footer className="border-t border-border px-4 sm:px-6 py-4">
+      <footer className="border-t border-dotted border-border px-4 sm:px-6 py-4">
         <div className="max-w-4xl mx-auto text-center text-xs text-muted-foreground/50">
           all transactions are final. ship worldwide.
         </div>

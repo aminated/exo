@@ -39,6 +39,23 @@ function NavLink({
   );
 }
 
+function RotatingPill() {
+  return (
+    <div className="animate-spin-slow" data-testid="rotating-pill">
+      <svg width="48" height="24" viewBox="0 0 48 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <clipPath id="pill-right-half">
+            <rect x="24" y="0" width="24" height="24" />
+          </clipPath>
+        </defs>
+        <rect x="1" y="1" width="46" height="22" rx="11" stroke="#b45309" strokeWidth="1.5" strokeDasharray="3 3" />
+        <rect x="1" y="1" width="46" height="22" rx="11" fill="#b45309" fillOpacity="0.3" clipPath="url(#pill-right-half)" />
+        <line x1="24" y1="3" x2="24" y2="21" stroke="#b45309" strokeWidth="1" strokeDasharray="2 2" />
+      </svg>
+    </div>
+  );
+}
+
 function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
@@ -69,9 +86,16 @@ function Layout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
-      <footer className="border-t border-dotted border-border px-4 sm:px-6 py-4">
-        <div className="max-w-4xl mx-auto text-center text-xs text-muted-foreground/50">
-          all transactions are final. ship worldwide.
+      <footer className="border-t border-dotted border-border px-4 sm:px-6 py-8">
+        <div className="max-w-4xl mx-auto flex flex-col items-center gap-6">
+          <div className="flex items-center gap-3">
+            <span className="text-amber-400 font-bold text-lg">"</span>
+            <RotatingPill />
+            <span className="text-amber-400 font-bold text-lg">"</span>
+          </div>
+          <div className="text-xs text-muted-foreground/50">
+            all transactions are final. ship worldwide.
+          </div>
         </div>
       </footer>
     </div>

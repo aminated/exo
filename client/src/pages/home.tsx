@@ -150,7 +150,7 @@ function ShippingMap() {
               cy={y}
               r={1.2}
               fill="none"
-              stroke="#b4530940"
+              stroke="#fbbf2440"
               strokeWidth="0.3"
               strokeDasharray="0.5 0.5"
             />
@@ -161,9 +161,9 @@ function ShippingMap() {
               cx={x}
               cy={y}
               r={1.2}
-              fill="#b45309"
+              fill="#fbbf24"
               fillOpacity="0.6"
-              stroke="#b45309"
+              stroke="#fbbf24"
               strokeWidth="0.4"
               strokeDasharray="0.5 0.5"
             />

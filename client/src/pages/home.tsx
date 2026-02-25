@@ -349,7 +349,7 @@ function PaymentSection({
       )}
 
       {totalItems > 0 && hasServices && (
-        <div className="border-t border-dotted border-border pt-4 mb-4" data-testid="section-service-form">
+        <div className="border border-dotted border-border rounded-md p-5 mt-4 mb-4" data-testid="section-service-form">
           <h4 className="text-xs font-bold tracking-wider text-amber-400 mb-3">service details:</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div className="sm:col-span-2">

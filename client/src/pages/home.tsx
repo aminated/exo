@@ -2,7 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, Loader2 } from "lucide-react";
+import { ShoppingCart, Loader2, Tag } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
@@ -192,6 +192,9 @@ function PaymentSection({
   const [serviceInfo, setServiceInfo] = useState({
     clientName: "", expectedCompound: "", manufacturer: "", signalSimplex: "",
   });
+  const [couponCode, setCouponCode] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; discountType: string; discountValue: string } | null>(null);
+  const [couponError, setCouponError] = useState("");
   const { toast } = useToast();
 
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
@@ -236,15 +239,34 @@ function PaymentSection({
     serviceInfo.clientName && serviceInfo.expectedCompound && serviceInfo.manufacturer && serviceInfo.signalSimplex
   );
 
+  const finalPrice = appliedCoupon ? Math.max(0, totalPrice - appliedCoupon.discount) : totalPrice;
+
+  const applyCouponMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiRequest("POST", "/api/coupons/validate", { code: couponCode, subtotal: totalPrice });
+      return await res.json();
+    },
+    onSuccess: (data: { code: string; discount: number; discountType: string; discountValue: string }) => {
+      setAppliedCoupon(data);
+      setCouponError("");
+      toast({ title: `coupon "${data.code}" applied` });
+    },
+    onError: (err: Error) => {
+      setCouponError(err.message);
+      setAppliedCoupon(null);
+    },
+  });
+
   const checkoutMutation = useMutation({
     mutationFn: async () => {
       const body: Record<string, unknown> = {
         items: cartItems,
-        totalPrice,
+        totalPrice: finalPrice,
         paymentMethod: selectedPayment,
       };
       if (hasProducts) body.shippingInfo = shippingInfo;
       if (hasServices) body.serviceInfo = serviceInfo;
+      if (appliedCoupon) body.couponCode = appliedCoupon.code;
       const res = await apiRequest("POST", "/api/checkout", body);
       return await res.json();
     },
@@ -374,11 +396,56 @@ function PaymentSection({
 
       {totalItems > 0 && (
         <div className="border-t border-dotted border-border pt-4 pb-2 flex flex-col items-center gap-3">
+          <div className="flex items-center gap-2 w-full max-w-sm" data-testid="section-coupon">
+            <div className="relative flex-1">
+              <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+              <Input
+                value={couponCode}
+                onChange={(e) => { setCouponCode(e.target.value); setCouponError(""); }}
+                placeholder="coupon code"
+                className="border-dotted pl-8 font-mono text-xs"
+                data-testid="input-coupon-code"
+              />
+            </div>
+            <Button
+              size="sm"
+              variant="outline"
+              className="border-dotted text-xs"
+              disabled={!couponCode || applyCouponMutation.isPending}
+              onClick={() => applyCouponMutation.mutate()}
+              data-testid="button-apply-coupon"
+            >
+              {applyCouponMutation.isPending ? "..." : "apply"}
+            </Button>
+          </div>
+          {couponError && <p className="text-xs text-red-400" data-testid="text-coupon-error">{couponError}</p>}
+          {appliedCoupon && (
+            <div className="flex items-center gap-2 text-xs" data-testid="text-coupon-applied">
+              <span className="text-amber-400">coupon "{appliedCoupon.code}" applied:</span>
+              <span className="text-green-400">
+                −${appliedCoupon.discount.toFixed(2)}
+                {appliedCoupon.discountType === "percentage" ? ` (${appliedCoupon.discountValue}%)` : ""}
+              </span>
+              <button onClick={() => { setAppliedCoupon(null); setCouponCode(""); }} className="text-muted-foreground hover:text-foreground" data-testid="button-remove-coupon">✕</button>
+            </div>
+          )}
           <div className="text-sm text-center">
-            <span className="text-muted-foreground">total:</span>{" "}
-            <span className="font-bold font-mono text-lg">
-              ${totalPrice.toFixed(2)}
-            </span>{" "}
+            {appliedCoupon ? (
+              <>
+                <span className="text-muted-foreground line-through mr-2">${totalPrice.toFixed(2)}</span>
+                <span className="font-bold font-mono text-lg text-amber-400">
+                  ${finalPrice.toFixed(2)}
+                </span>
+              </>
+            ) : (
+              <>
+                <span className="text-muted-foreground">total:</span>{" "}
+                <span className="font-bold font-mono text-lg">
+                  ${totalPrice.toFixed(2)}
+                </span>
+              </>
+            )}
+            {" "}
             <span className="text-muted-foreground text-xs">
               ({totalItems} item{totalItems > 1 ? "s" : ""})
             </span>

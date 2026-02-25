@@ -4,7 +4,7 @@ import crypto from "crypto";
 import path from "path";
 import multer from "multer";
 import { storage } from "./storage";
-import { insertProductSchema, insertBlogPostSchema, insertTestResultSchema, shippingInfoSchema, serviceInfoSchema } from "@shared/schema";
+import { insertProductSchema, insertBlogPostSchema, insertTestResultSchema, insertCouponSchema, shippingInfoSchema, serviceInfoSchema } from "@shared/schema";
 
 const uploadDir = path.join(process.cwd(), "uploads");
 const uploadStorage = multer.diskStorage({
@@ -253,9 +253,74 @@ export async function registerRoutes(
     res.json(page);
   });
 
+  app.get("/api/admin/coupons", requireAdmin, async (_req, res) => {
+    const allCoupons = await storage.getCoupons();
+    res.json(allCoupons);
+  });
+
+  app.post("/api/admin/coupons", requireAdmin, async (req, res) => {
+    const parsed = insertCouponSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid coupon data", errors: parsed.error.flatten() });
+    }
+    const coupon = await storage.createCoupon(parsed.data);
+    res.status(201).json(coupon);
+  });
+
+  app.patch("/api/admin/coupons/:id", requireAdmin, async (req, res) => {
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+    const parsed = insertCouponSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid coupon data", errors: parsed.error.flatten() });
+    }
+    const coupon = await storage.updateCoupon(id, parsed.data);
+    if (!coupon) return res.status(404).json({ message: "Coupon not found" });
+    res.json(coupon);
+  });
+
+  app.delete("/api/admin/coupons/:id", requireAdmin, async (req, res) => {
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+    const deleted = await storage.deleteCoupon(id);
+    if (!deleted) return res.status(404).json({ message: "Coupon not found" });
+    res.json({ success: true });
+  });
+
+  app.post("/api/coupons/validate", async (req, res) => {
+    const { code, subtotal } = req.body;
+    if (!code || typeof code !== "string") {
+      return res.status(400).json({ message: "Coupon code is required" });
+    }
+    const coupon = await storage.getCouponByCode(code);
+    if (!coupon || !coupon.isActive) {
+      return res.status(404).json({ message: "Invalid or expired coupon code" });
+    }
+    if (coupon.maxUses && coupon.usedCount >= coupon.maxUses) {
+      return res.status(400).json({ message: "This coupon has reached its maximum uses" });
+    }
+    if (coupon.minOrderAmount && subtotal < Number(coupon.minOrderAmount)) {
+      return res.status(400).json({ message: `Minimum order amount of $${coupon.minOrderAmount} required` });
+    }
+    let discount = 0;
+    if (coupon.discountType === "percentage") {
+      discount = (subtotal * Number(coupon.discountValue)) / 100;
+    } else {
+      discount = Math.min(Number(coupon.discountValue), subtotal);
+    }
+    res.json({
+      valid: true,
+      couponId: coupon.id,
+      code: coupon.code,
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      discount: Math.round(discount * 100) / 100,
+    });
+  });
+
   app.post("/api/checkout", async (req, res) => {
     try {
-      const { items, paymentMethod, shippingInfo, serviceInfo } = req.body;
+      const { items, paymentMethod, shippingInfo, serviceInfo, couponCode } = req.body;
 
       if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ message: "Cart is empty" });
@@ -290,6 +355,26 @@ export async function registerRoutes(
         verifiedItems.push({ productId: product.id, name: product.name, quantity: item.quantity, unitPrice: product.unitPrice, category: product.category });
       }
 
+      let appliedCoupon = null;
+      if (couponCode && typeof couponCode === "string") {
+        const coupon = await storage.getCouponByCode(couponCode);
+        if (coupon && coupon.isActive) {
+          const withinMaxUses = !coupon.maxUses || coupon.usedCount < coupon.maxUses;
+          const meetsMinimum = !coupon.minOrderAmount || computedTotal >= Number(coupon.minOrderAmount);
+          if (withinMaxUses && meetsMinimum) {
+            let discount = 0;
+            if (coupon.discountType === "percentage") {
+              discount = (computedTotal * Number(coupon.discountValue)) / 100;
+            } else {
+              discount = Math.min(Number(coupon.discountValue), computedTotal);
+            }
+            discount = Math.round(discount * 100) / 100;
+            computedTotal = Math.max(0, computedTotal - discount);
+            appliedCoupon = coupon;
+          }
+        }
+      }
+
       let validatedShipping = null;
       let validatedService = null;
 
@@ -320,6 +405,10 @@ export async function registerRoutes(
         serviceInfo: validatedService ? JSON.stringify(validatedService) : null,
         status: "pending",
       });
+
+      if (appliedCoupon) {
+        await storage.incrementCouponUsage(appliedCoupon.id);
+      }
 
       if (!BITCART_API_URL || !BITCART_API_TOKEN || !BITCART_STORE_ID) {
         return res.json({

@@ -1,4 +1,4 @@
-import { type Product, type InsertProduct, type BlogPost, type InsertBlogPost, type Order, type InsertOrder, type SitePage, type TestResult, type InsertTestResult, products, blogPosts, orders, sitePages, testResults } from "@shared/schema";
+import { type Product, type InsertProduct, type BlogPost, type InsertBlogPost, type Order, type InsertOrder, type SitePage, type TestResult, type InsertTestResult, type Coupon, type InsertCoupon, products, blogPosts, orders, sitePages, testResults, coupons } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc } from "drizzle-orm";
 
@@ -24,6 +24,12 @@ export interface IStorage {
   createTestResult(result: InsertTestResult): Promise<TestResult>;
   updateTestResult(id: number, result: Partial<InsertTestResult>): Promise<TestResult | undefined>;
   deleteTestResult(id: number): Promise<boolean>;
+  getCoupons(): Promise<Coupon[]>;
+  getCouponByCode(code: string): Promise<Coupon | undefined>;
+  createCoupon(coupon: InsertCoupon): Promise<Coupon>;
+  updateCoupon(id: number, coupon: Partial<InsertCoupon>): Promise<Coupon | undefined>;
+  deleteCoupon(id: number): Promise<boolean>;
+  incrementCouponUsage(id: number): Promise<void>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -132,6 +138,38 @@ export class DatabaseStorage implements IStorage {
   async deleteTestResult(id: number): Promise<boolean> {
     const res = await db.delete(testResults).where(eq(testResults.id, id)).returning();
     return res.length > 0;
+  }
+  async getCoupons(): Promise<Coupon[]> {
+    return await db.select().from(coupons).orderBy(desc(coupons.createdAt));
+  }
+
+  async getCouponByCode(code: string): Promise<Coupon | undefined> {
+    const [coupon] = await db.select().from(coupons).where(eq(coupons.code, code.toLowerCase()));
+    return coupon;
+  }
+
+  async createCoupon(coupon: InsertCoupon): Promise<Coupon> {
+    const [created] = await db.insert(coupons).values({ ...coupon, code: coupon.code.toLowerCase() }).returning();
+    return created;
+  }
+
+  async updateCoupon(id: number, coupon: Partial<InsertCoupon>): Promise<Coupon | undefined> {
+    const data = { ...coupon };
+    if (data.code) data.code = data.code.toLowerCase();
+    const [updated] = await db.update(coupons).set(data).where(eq(coupons.id, id)).returning();
+    return updated;
+  }
+
+  async deleteCoupon(id: number): Promise<boolean> {
+    const res = await db.delete(coupons).where(eq(coupons.id, id)).returning();
+    return res.length > 0;
+  }
+
+  async incrementCouponUsage(id: number): Promise<void> {
+    const coupon = await db.select().from(coupons).where(eq(coupons.id, id));
+    if (coupon.length > 0) {
+      await db.update(coupons).set({ usedCount: coupon[0].usedCount + 1 }).where(eq(coupons.id, id));
+    }
   }
 }
 

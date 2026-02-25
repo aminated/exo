@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock, EyeOff, Eye, FileText, FlaskConical, Upload, X } from "lucide-react";
-import type { Product, BlogPost, TestResult } from "@shared/schema";
+import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock, EyeOff, Eye, FileText, FlaskConical, Upload, X, Tag } from "lucide-react";
+import type { Product, BlogPost, TestResult, Coupon } from "@shared/schema";
 
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const [username, setUsername] = useState("");
@@ -903,6 +903,221 @@ function ResultsManager() {
   );
 }
 
+function CouponsManager() {
+  const { toast } = useToast();
+  const [editing, setEditing] = useState<Coupon | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [code, setCode] = useState("");
+  const [discountType, setDiscountType] = useState("percentage");
+  const [discountValue, setDiscountValue] = useState("");
+  const [minOrderAmount, setMinOrderAmount] = useState("");
+  const [maxUses, setMaxUses] = useState("");
+  const [isActive, setIsActive] = useState(true);
+
+  const { data: allCoupons = [], isLoading } = useQuery<Coupon[]>({
+    queryKey: ["/api/admin/coupons"],
+  });
+
+  const resetForm = () => {
+    setCode("");
+    setDiscountType("percentage");
+    setDiscountValue("");
+    setMinOrderAmount("");
+    setMaxUses("");
+    setIsActive(true);
+    setEditing(null);
+    setCreating(false);
+  };
+
+  const startEdit = (c: Coupon) => {
+    setEditing(c);
+    setCreating(false);
+    setCode(c.code);
+    setDiscountType(c.discountType);
+    setDiscountValue(c.discountValue);
+    setMinOrderAmount(c.minOrderAmount || "");
+    setMaxUses(c.maxUses?.toString() || "");
+    setIsActive(c.isActive);
+  };
+
+  const startCreate = () => {
+    resetForm();
+    setCreating(true);
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      const body: Record<string, unknown> = {
+        code,
+        discountType,
+        discountValue,
+        isActive,
+      };
+      if (minOrderAmount) body.minOrderAmount = minOrderAmount;
+      if (maxUses) body.maxUses = parseInt(maxUses);
+      if (editing) {
+        await apiRequest("PATCH", `/api/admin/coupons/${editing.id}`, body);
+      } else {
+        await apiRequest("POST", "/api/admin/coupons", body);
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
+      toast({ title: editing ? "coupon updated" : "coupon created" });
+      resetForm();
+    },
+    onError: (err: Error) => {
+      toast({ title: err.message, variant: "destructive" });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      await apiRequest("DELETE", `/api/admin/coupons/${id}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
+      toast({ title: "coupon deleted" });
+      if (editing) resetForm();
+    },
+    onError: (err: Error) => {
+      toast({ title: err.message, variant: "destructive" });
+    },
+  });
+
+  const toggleMutation = useMutation({
+    mutationFn: async ({ id, active }: { id: number; active: boolean }) => {
+      await apiRequest("PATCH", `/api/admin/coupons/${id}`, { isActive: active });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/coupons"] });
+    },
+  });
+
+  if (isLoading) {
+    return <div className="h-40 bg-muted/30 animate-pulse rounded-md" />;
+  }
+
+  return (
+    <div>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-sm font-bold tracking-wider">coupons ({allCoupons.length})</h3>
+        <Button size="sm" onClick={startCreate} className="gap-1.5 bg-white text-black hover:bg-neutral-200 border border-dotted border-white/40" data-testid="button-coupon-add">
+          <Plus className="h-3.5 w-3.5" /> add coupon
+        </Button>
+      </div>
+
+      {(creating || editing) && (
+        <div className="border border-dotted border-border rounded-md p-5 space-y-4 mb-4" data-testid="form-coupon">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">code</label>
+              <Input value={code} onChange={(e) => setCode(e.target.value)} className="border-dotted font-mono" placeholder="e.g. SAVE10" data-testid="input-coupon-code" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">discount type</label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setDiscountType("percentage")}
+                  className={`flex-1 px-3 py-2 rounded-md text-xs tracking-wider transition-colors border ${
+                    discountType === "percentage"
+                      ? "bg-amber-700/15 text-amber-400 border-dotted border-amber-600/30"
+                      : "text-muted-foreground border-dotted border-border hover:text-foreground"
+                  }`}
+                  data-testid="button-coupon-type-percentage"
+                >
+                  percentage (%)
+                </button>
+                <button
+                  onClick={() => setDiscountType("fixed")}
+                  className={`flex-1 px-3 py-2 rounded-md text-xs tracking-wider transition-colors border ${
+                    discountType === "fixed"
+                      ? "bg-amber-700/15 text-amber-400 border-dotted border-amber-600/30"
+                      : "text-muted-foreground border-dotted border-border hover:text-foreground"
+                  }`}
+                  data-testid="button-coupon-type-fixed"
+                >
+                  fixed ($)
+                </button>
+              </div>
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">
+                discount value {discountType === "percentage" ? "(%)" : "($)"}
+              </label>
+              <Input value={discountValue} onChange={(e) => setDiscountValue(e.target.value)} type="number" step="0.01" className="border-dotted" placeholder={discountType === "percentage" ? "e.g. 10" : "e.g. 5.00"} data-testid="input-coupon-value" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">min order amount ($, optional)</label>
+              <Input value={minOrderAmount} onChange={(e) => setMinOrderAmount(e.target.value)} type="number" step="0.01" className="border-dotted" placeholder="e.g. 50.00" data-testid="input-coupon-min" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">max uses (optional)</label>
+              <Input value={maxUses} onChange={(e) => setMaxUses(e.target.value)} type="number" className="border-dotted" placeholder="unlimited if empty" data-testid="input-coupon-max-uses" />
+            </div>
+            <div className="flex items-end">
+              <button
+                onClick={() => setIsActive(!isActive)}
+                className={`px-3 py-2 rounded-md text-xs tracking-wider transition-colors border ${
+                  isActive
+                    ? "bg-amber-700/15 text-amber-400 border-dotted border-amber-600/30"
+                    : "text-muted-foreground border-dotted border-border"
+                }`}
+                data-testid="button-coupon-active-toggle"
+              >
+                {isActive ? "active" : "inactive"}
+              </button>
+            </div>
+          </div>
+          <div className="flex gap-2">
+            <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending || !code || !discountValue} className="bg-white text-black hover:bg-neutral-200 border border-dotted border-white/40" data-testid="button-coupon-save">
+              {saveMutation.isPending ? "saving..." : editing ? "update coupon" : "create coupon"}
+            </Button>
+            <Button variant="outline" onClick={resetForm} className="border-dotted" data-testid="button-coupon-cancel">cancel</Button>
+          </div>
+        </div>
+      )}
+
+      {allCoupons.length === 0 && !creating && (
+        <div className="text-sm text-muted-foreground text-center py-8 border border-dotted border-border rounded-md">
+          no coupons yet. click "add coupon" to create one.
+        </div>
+      )}
+
+      {allCoupons.length > 0 && (
+        <div className="space-y-2">
+          {allCoupons.map((c) => (
+            <div key={c.id} className="border border-dotted border-border rounded-md p-4 flex items-center justify-between" data-testid={`coupon-row-${c.id}`}>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <span className="font-mono text-sm font-bold text-amber-400">{c.code}</span>
+                  {!c.isActive && <span className="text-xs text-red-400">(inactive)</span>}
+                </div>
+                <div className="text-xs text-muted-foreground mt-1">
+                  {c.discountType === "percentage" ? `${c.discountValue}% off` : `$${c.discountValue} off`}
+                  {c.minOrderAmount ? ` · min $${c.minOrderAmount}` : ""}
+                  {c.maxUses ? ` · ${c.usedCount}/${c.maxUses} used` : ` · ${c.usedCount} used`}
+                </div>
+              </div>
+              <div className="flex items-center gap-1">
+                <Button size="sm" variant="ghost" onClick={() => toggleMutation.mutate({ id: c.id, active: !c.isActive })} className="h-8 w-8 p-0" data-testid={`button-coupon-toggle-${c.id}`}>
+                  {c.isActive ? <Eye className="h-3.5 w-3.5 text-amber-400" /> : <EyeOff className="h-3.5 w-3.5 text-muted-foreground" />}
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => startEdit(c)} className="h-8 w-8 p-0" data-testid={`button-coupon-edit-${c.id}`}>
+                  <Pencil className="h-3.5 w-3.5" />
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => deleteMutation.mutate(c.id)} className="h-8 w-8 p-0 text-red-400 hover:text-red-300" data-testid={`button-coupon-delete-${c.id}`}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
 interface SitePage {
   slug: string;
   title: string;
@@ -1072,7 +1287,7 @@ function PagesManager() {
 }
 
 export default function Admin() {
-  const [tab, setTab] = useState<"products" | "posts" | "results" | "pages">("products");
+  const [tab, setTab] = useState<"products" | "posts" | "results" | "coupons" | "pages">("products");
 
   const { data: authData, isLoading: authLoading } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
@@ -1161,6 +1376,18 @@ export default function Admin() {
           results
         </button>
         <button
+          onClick={() => setTab("coupons")}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs tracking-wider transition-colors border ${
+            tab === "coupons"
+              ? "bg-amber-700/15 text-amber-400 border-dotted border-amber-600/30"
+              : "text-muted-foreground border-dotted border-border hover:text-foreground"
+          }`}
+          data-testid="tab-coupons"
+        >
+          <Tag className="h-3.5 w-3.5" />
+          coupons
+        </button>
+        <button
           onClick={() => setTab("pages")}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs tracking-wider transition-colors border ${
             tab === "pages"
@@ -1177,6 +1404,7 @@ export default function Admin() {
       {tab === "products" && <ProductsManager />}
       {tab === "posts" && <PostsManager />}
       {tab === "results" && <ResultsManager />}
+      {tab === "coupons" && <CouponsManager />}
       {tab === "pages" && <PagesManager />}
     </div>
   );

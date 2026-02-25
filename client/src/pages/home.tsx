@@ -331,7 +331,7 @@ function PaymentSection({
       </p>
 
       {totalItems > 0 && hasProducts && (
-        <div className="border-t border-dotted border-border pt-4 mb-4" data-testid="section-shipping-form">
+        <div className="border border-dotted border-border rounded-md p-5 mt-4 mb-4" data-testid="section-shipping-form">
           <h4 className="text-xs font-bold tracking-wider text-amber-400 mb-3">shipping details:</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
@@ -396,7 +396,7 @@ function PaymentSection({
 
       {totalItems > 0 && (
         <div className="border-t border-dotted border-border pt-4 pb-2 flex flex-col items-center gap-3">
-          <div className="flex items-center gap-2 w-full max-w-sm" data-testid="section-coupon">
+          <div className="flex items-center justify-center gap-2 w-full max-w-sm mx-auto" data-testid="section-coupon">
             <div className="relative flex-1">
               <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input

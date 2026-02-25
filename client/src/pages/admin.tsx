@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock, EyeOff, Eye, FileText, FlaskConical, Upload, X, Tag, ShoppingCart, ChevronDown, ChevronUp } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock, EyeOff, Eye, FileText, FlaskConical, Upload, X, Tag, ShoppingCart, ChevronDown, ChevronUp, Search } from "lucide-react";
 import type { Product, BlogPost, TestResult, Coupon, Order } from "@shared/schema";
 
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
@@ -905,10 +905,60 @@ function ResultsManager() {
 
 function OrdersManager() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [paymentFilter, setPaymentFilter] = useState<string>("all");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [sortBy, setSortBy] = useState<"newest" | "oldest" | "price-high" | "price-low">("newest");
 
   const { data: allOrders = [], isLoading } = useQuery<Order[]>({
     queryKey: ["/api/admin/orders"],
   });
+
+  const parseJson = (str: string | null) => { try { return str ? JSON.parse(str) : null; } catch { return null; } };
+
+  const filteredOrders = allOrders.filter((order) => {
+    if (statusFilter !== "all" && order.status !== statusFilter) return false;
+    if (paymentFilter !== "all" && order.paymentMethod !== paymentFilter) return false;
+
+    if (dateFrom) {
+      const from = new Date(dateFrom);
+      if (order.createdAt && new Date(order.createdAt) < from) return false;
+    }
+    if (dateTo) {
+      const to = new Date(dateTo);
+      to.setHours(23, 59, 59, 999);
+      if (order.createdAt && new Date(order.createdAt) > to) return false;
+    }
+
+    if (search) {
+      const q = search.toLowerCase();
+      const shipping = parseJson(order.shippingInfo);
+      const service = parseJson(order.serviceInfo);
+      const items = parseJson(order.items) || [];
+      const searchableFields = [
+        order.orderUid,
+        order.status,
+        order.paymentMethod,
+        order.totalPrice,
+        shipping?.firstName, shipping?.lastName, shipping?.email,
+        shipping?.city, shipping?.state, shipping?.country, shipping?.streetAddress,
+        service?.clientName, service?.expectedCompound, service?.manufacturer, service?.signalSimplex,
+        ...items.map((i: { name: string }) => i.name),
+      ].filter(Boolean).join(" ").toLowerCase();
+      if (!searchableFields.includes(q)) return false;
+    }
+
+    return true;
+  }).sort((a, b) => {
+    if (sortBy === "newest") return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+    if (sortBy === "oldest") return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+    if (sortBy === "price-high") return Number(b.totalPrice) - Number(a.totalPrice);
+    return Number(a.totalPrice) - Number(b.totalPrice);
+  });
+
+  const hasActiveFilters = search || statusFilter !== "all" || paymentFilter !== "all" || dateFrom || dateTo;
 
   if (isLoading) {
     return <div className="h-40 bg-muted/30 animate-pulse rounded-md" />;
@@ -918,18 +968,106 @@ function OrdersManager() {
     <div>
       <h3 className="text-sm font-bold tracking-wider mb-4">orders ({allOrders.length})</h3>
 
-      {allOrders.length === 0 && (
+      <div className="border border-dotted border-border rounded-md p-4 mb-4 space-y-3" data-testid="section-order-filters">
+        <div className="relative">
+          <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+          <Input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="search by name, email, order id, product, compound..."
+            className="border-dotted pl-8 text-xs"
+            data-testid="input-order-search"
+          />
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <div className="flex gap-1">
+            {["all", "pending", "paid"].map((s) => (
+              <button
+                key={s}
+                onClick={() => setStatusFilter(s)}
+                className={`px-3 py-1.5 rounded-md text-xs tracking-wider transition-colors border ${
+                  statusFilter === s
+                    ? "bg-amber-700/15 text-amber-400 border-dotted border-amber-600/30"
+                    : "text-muted-foreground border-dotted border-border hover:text-foreground"
+                }`}
+                data-testid={`button-filter-status-${s}`}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-1">
+            {["all", "btc", "ltc", "xmr"].map((p) => (
+              <button
+                key={p}
+                onClick={() => setPaymentFilter(p)}
+                className={`px-3 py-1.5 rounded-md text-xs tracking-wider transition-colors border ${
+                  paymentFilter === p
+                    ? "bg-amber-700/15 text-amber-400 border-dotted border-amber-600/30"
+                    : "text-muted-foreground border-dotted border-border hover:text-foreground"
+                }`}
+                data-testid={`button-filter-payment-${p}`}
+              >
+                {p === "all" ? "all methods" : p.toUpperCase()}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-3 items-end">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">from</label>
+            <Input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className="border-dotted text-xs w-36" data-testid="input-order-date-from" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">to</label>
+            <Input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className="border-dotted text-xs w-36" data-testid="input-order-date-to" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">sort</label>
+            <div className="flex gap-1">
+              {([["newest", "newest"], ["oldest", "oldest"], ["price-high", "$ high"], ["price-low", "$ low"]] as const).map(([val, label]) => (
+                <button
+                  key={val}
+                  onClick={() => setSortBy(val)}
+                  className={`px-2 py-1.5 rounded-md text-xs tracking-wider transition-colors border ${
+                    sortBy === val
+                      ? "bg-amber-700/15 text-amber-400 border-dotted border-amber-600/30"
+                      : "text-muted-foreground border-dotted border-border hover:text-foreground"
+                  }`}
+                  data-testid={`button-sort-${val}`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {hasActiveFilters && (
+            <button
+              onClick={() => { setSearch(""); setStatusFilter("all"); setPaymentFilter("all"); setDateFrom(""); setDateTo(""); }}
+              className="text-xs text-red-400 hover:text-red-300 px-2 py-1.5"
+              data-testid="button-clear-filters"
+            >
+              clear filters
+            </button>
+          )}
+        </div>
+        <div className="text-xs text-muted-foreground">
+          showing {filteredOrders.length} of {allOrders.length} orders
+        </div>
+      </div>
+
+      {filteredOrders.length === 0 && (
         <div className="text-sm text-muted-foreground text-center py-8 border border-dotted border-border rounded-md">
-          no orders yet.
+          {allOrders.length === 0 ? "no orders yet." : "no orders match your filters."}
         </div>
       )}
 
-      {allOrders.length > 0 && (
+      {filteredOrders.length > 0 && (
         <div className="space-y-2">
-          {allOrders.map((order) => {
-            const items = (() => { try { return JSON.parse(order.items); } catch { return []; } })();
-            const shipping = (() => { try { return order.shippingInfo ? JSON.parse(order.shippingInfo) : null; } catch { return null; } })();
-            const service = (() => { try { return order.serviceInfo ? JSON.parse(order.serviceInfo) : null; } catch { return null; } })();
+          {filteredOrders.map((order) => {
+            const items = parseJson(order.items) || [];
+            const shipping = parseJson(order.shippingInfo);
+            const service = parseJson(order.serviceInfo);
             const isExpanded = expandedId === order.id;
 
             return (

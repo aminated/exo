@@ -12,6 +12,7 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - 2026-02-25: Products now have category ("product" or "service") with different checkout forms
 - 2026-02-25: Order IDs are now non-sequential (random hex UIDs)
 - 2026-02-25: Products can be hidden from public listing via admin toggle
+- 2026-02-25: Terms of Service page added, editable from admin "pages" tab
 
 ## Architecture
 - **Frontend**: React + Vite + TailwindCSS + shadcn/ui with black background, bold Doto font, gold accents
@@ -24,7 +25,8 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - `/musings/:slug` - Individual blog post
 - `/products` - Product listing with table, quantity controls, payment method selection
 - `/product/:slug` - Individual product detail page with description
-- `/admin` - Admin portal (password-protected) for managing products and blog posts
+- `/terms` - Terms of service (editable from admin)
+- `/admin` - Admin portal (password-protected) for managing products, blog posts, and pages
 
 ## Admin Portal
 - Password-based auth using express-session with PostgreSQL session store
@@ -34,6 +36,7 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - Products have category: "product" (physical, needs shipping) or "service" (needs compound + signal/simplex)
 - CRUD for blog posts: create, edit title/slug/content/excerpt/isLocked/lockPassword, delete
 - Locked posts: admin can mark posts as "private entry" with a password
+- Pages tab: edit terms of service content (stored in site_pages table)
 
 ## Checkout Flow
 - Cart detects whether items are products (physical) or services
@@ -51,6 +54,7 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - `products` - name, slug, concentration, type, unitPrice, description, inStock, isHidden, category
 - `blogPosts` - title, slug, content, excerpt, isLocked, lockPassword, publishedAt
 - `orders` - orderUid (random hex), items (JSON), totalPrice, paymentMethod, shippingInfo (JSON), serviceInfo (JSON), bitcartInvoiceId, status, createdAt
+- `sitePages` - slug, title, content, updatedAt
 
 ## Project Structure
 - `client/src/pages/` - Page components

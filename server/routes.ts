@@ -168,6 +168,23 @@ export async function registerRoutes(
     res.json({ success: true });
   });
 
+  app.get("/api/pages/:slug", async (req, res) => {
+    const page = await storage.getSitePage(req.params.slug);
+    if (!page) {
+      return res.json({ slug: req.params.slug, title: "", content: "", updatedAt: null });
+    }
+    res.json(page);
+  });
+
+  app.put("/api/admin/pages/:slug", requireAdmin, async (req, res) => {
+    const { title, content } = req.body;
+    if (typeof title !== "string" || typeof content !== "string") {
+      return res.status(400).json({ message: "Title and content are required" });
+    }
+    const page = await storage.upsertSitePage(req.params.slug, title, content);
+    res.json(page);
+  });
+
   app.post("/api/checkout", async (req, res) => {
     try {
       const { items, paymentMethod, shippingInfo, serviceInfo } = req.body;

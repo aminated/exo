@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock, EyeOff, Eye } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock, EyeOff, Eye, FileText } from "lucide-react";
 import type { Product, BlogPost } from "@shared/schema";
 
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
@@ -632,8 +632,77 @@ function PostsManager() {
   );
 }
 
+interface SitePage {
+  slug: string;
+  title: string;
+  content: string;
+  updatedAt: string | null;
+}
+
+function PagesManager() {
+  const { toast } = useToast();
+  const [content, setContent] = useState("");
+  const [loaded, setLoaded] = useState(false);
+
+  const { data: page, isLoading } = useQuery<SitePage>({
+    queryKey: ["/api/pages/terms"],
+  });
+
+  if (page && !loaded) {
+    setContent(page.content || "");
+    setLoaded(true);
+  }
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("PUT", "/api/admin/pages/terms", {
+        title: "terms of service",
+        content,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/pages/terms"] });
+      toast({ title: "terms of service saved" });
+    },
+    onError: (err: Error) => {
+      toast({ title: err.message, variant: "destructive" });
+    },
+  });
+
+  if (isLoading) {
+    return <div className="h-40 bg-muted/30 animate-pulse rounded-md" />;
+  }
+
+  return (
+    <div>
+      <h3 className="text-sm font-bold tracking-wider mb-4">terms of service</h3>
+      <div className="border border-dotted border-border rounded-md p-5 space-y-4">
+        <div>
+          <label className="text-xs text-muted-foreground mb-1 block">content</label>
+          <Textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            rows={16}
+            className="border-dotted font-mono text-xs"
+            placeholder="enter your terms of service here..."
+            data-testid="input-terms-content"
+          />
+        </div>
+        <Button
+          onClick={() => saveMutation.mutate()}
+          disabled={saveMutation.isPending}
+          className="bg-white text-black hover:bg-neutral-200 border border-dotted border-white/40"
+          data-testid="button-terms-save"
+        >
+          {saveMutation.isPending ? "saving..." : "save terms"}
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function Admin() {
-  const [tab, setTab] = useState<"products" | "posts">("products");
+  const [tab, setTab] = useState<"products" | "posts" | "pages">("products");
 
   const { data: authData, isLoading: authLoading } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
@@ -709,9 +778,23 @@ export default function Admin() {
           <Pen className="h-3.5 w-3.5" />
           blog posts
         </button>
+        <button
+          onClick={() => setTab("pages")}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs tracking-wider transition-colors border ${
+            tab === "pages"
+              ? "bg-amber-700/15 text-amber-400 border-dotted border-amber-600/30"
+              : "text-muted-foreground border-dotted border-border hover:text-foreground"
+          }`}
+          data-testid="tab-pages"
+        >
+          <FileText className="h-3.5 w-3.5" />
+          pages
+        </button>
       </div>
 
-      {tab === "products" ? <ProductsManager /> : <PostsManager />}
+      {tab === "products" && <ProductsManager />}
+      {tab === "posts" && <PostsManager />}
+      {tab === "pages" && <PagesManager />}
     </div>
   );
 }

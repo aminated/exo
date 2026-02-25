@@ -73,6 +73,16 @@ export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type Order = typeof orders.$inferSelect;
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
 
+export const sitePages = pgTable("site_pages", {
+  id: serial("id").primaryKey(),
+  slug: text("slug").notNull().unique(),
+  title: text("title").notNull(),
+  content: text("content").notNull().default(""),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export type SitePage = typeof sitePages.$inferSelect;
+
 export const shippingInfoSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),

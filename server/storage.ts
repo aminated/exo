@@ -1,4 +1,4 @@
-import { type Product, type InsertProduct, type BlogPost, type InsertBlogPost, type Order, type InsertOrder, products, blogPosts, orders } from "@shared/schema";
+import { type Product, type InsertProduct, type BlogPost, type InsertBlogPost, type Order, type InsertOrder, type SitePage, products, blogPosts, orders, sitePages } from "@shared/schema";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
 
@@ -17,6 +17,8 @@ export interface IStorage {
   deleteBlogPost(id: number): Promise<boolean>;
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrderBitcartId(id: number, bitcartInvoiceId: string): Promise<Order | undefined>;
+  getSitePage(slug: string): Promise<SitePage | undefined>;
+  upsertSitePage(slug: string, title: string, content: string): Promise<SitePage>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -86,6 +88,21 @@ export class DatabaseStorage implements IStorage {
   async updateOrderBitcartId(id: number, bitcartInvoiceId: string): Promise<Order | undefined> {
     const [updated] = await db.update(orders).set({ bitcartInvoiceId }).where(eq(orders.id, id)).returning();
     return updated;
+  }
+
+  async getSitePage(slug: string): Promise<SitePage | undefined> {
+    const [page] = await db.select().from(sitePages).where(eq(sitePages.slug, slug));
+    return page;
+  }
+
+  async upsertSitePage(slug: string, title: string, content: string): Promise<SitePage> {
+    const existing = await this.getSitePage(slug);
+    if (existing) {
+      const [updated] = await db.update(sitePages).set({ title, content, updatedAt: new Date() }).where(eq(sitePages.slug, slug)).returning();
+      return updated;
+    }
+    const [created] = await db.insert(sitePages).values({ slug, title, content }).returning();
+    return created;
   }
 }
 

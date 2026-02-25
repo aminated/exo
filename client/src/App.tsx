@@ -9,6 +9,7 @@ import ProductDetail from "@/pages/product-detail";
 import Musings from "@/pages/musings";
 import PostDetail from "@/pages/post-detail";
 import Admin from "@/pages/admin";
+import Terms from "@/pages/terms";
 import { Package, Pen } from "lucide-react";
 
 function NavLink({
@@ -93,8 +94,12 @@ function Layout({ children }: { children: React.ReactNode }) {
             <RotatingPill />
             <span className="text-amber-400 font-bold text-lg">"</span>
           </div>
-          <div className="text-xs text-muted-foreground/50">
-            in god we trust. all others must bring data.
+          <div className="text-xs text-muted-foreground/50 flex items-center gap-2">
+            <span>in god we trust. all others must bring data.</span>
+            <span>·</span>
+            <Link href="/terms" className="hover:text-muted-foreground transition-colors underline underline-offset-2" data-testid="link-terms">
+              terms
+            </Link>
           </div>
         </div>
       </footer>
@@ -110,6 +115,7 @@ function Router() {
         <Route path="/musings/:slug" component={PostDetail} />
         <Route path="/products" component={Home} />
         <Route path="/product/:slug" component={ProductDetail} />
+        <Route path="/terms" component={Terms} />
         <Route path="/admin" component={Admin} />
         <Route component={NotFound} />
       </Switch>

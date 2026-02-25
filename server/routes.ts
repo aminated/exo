@@ -25,8 +25,9 @@ export async function registerRoutes(
   app: Express
 ): Promise<Server> {
   app.get("/api/products", async (_req, res) => {
-    const products = await storage.getProducts();
-    res.json(products);
+    const allProducts = await storage.getProducts();
+    const visible = allProducts.filter((p) => !p.isHidden);
+    res.json(visible);
   });
 
   app.get("/api/products/:slug", async (req, res) => {

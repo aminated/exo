@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock, EyeOff, Eye } from "lucide-react";
 import type { Product, BlogPost } from "@shared/schema";
 
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
@@ -82,6 +82,7 @@ function ProductForm({
     unitPrice: product?.unitPrice || "",
     description: product?.description || "",
     inStock: product?.inStock ?? true,
+    isHidden: product?.isHidden ?? false,
   });
 
   const mutation = useMutation({
@@ -174,7 +175,7 @@ function ProductForm({
             data-testid="input-product-price"
           />
         </div>
-        <div className="flex items-end gap-2">
+        <div className="flex items-end gap-4">
           <label className="text-xs text-muted-foreground flex items-center gap-2">
             <input
               type="checkbox"
@@ -183,6 +184,15 @@ function ProductForm({
               data-testid="input-product-instock"
             />
             in stock
+          </label>
+          <label className="text-xs text-muted-foreground flex items-center gap-2">
+            <input
+              type="checkbox"
+              checked={form.isHidden}
+              onChange={(e) => updateField("isHidden", e.target.checked)}
+              data-testid="input-product-hidden"
+            />
+            hidden
           </label>
         </div>
       </div>
@@ -374,6 +384,16 @@ function ProductsManager() {
     },
   });
 
+  const toggleHiddenMutation = useMutation({
+    mutationFn: async ({ id, isHidden }: { id: number; isHidden: boolean }) => {
+      await apiRequest("PATCH", `/api/admin/products/${id}`, { isHidden });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/admin/products"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+    },
+  });
+
   if (editing) {
     return (
       <ProductForm
@@ -423,14 +443,25 @@ function ProductsManager() {
               data-testid={`admin-product-${product.id}`}
             >
               <div className="flex-1 min-w-0">
-                <div className="text-sm font-medium text-amber-400 truncate">
+                <div className={`text-sm font-medium truncate flex items-center gap-1.5 ${product.isHidden ? "text-muted-foreground" : "text-amber-400"}`}>
+                  {product.isHidden && <EyeOff className="h-3 w-3 flex-shrink-0" />}
                   {product.name}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  ${Number(product.unitPrice).toFixed(2)} · {product.inStock ? "in stock" : "out of stock"}
+                  ${Number(product.unitPrice).toFixed(2)} · {product.inStock ? "in stock" : "out of stock"}{product.isHidden ? " · hidden" : ""}
                 </div>
               </div>
               <div className="flex gap-1.5">
+                <Button
+                  size="icon"
+                  variant="secondary"
+                  onClick={() => toggleHiddenMutation.mutate({ id: product.id, isHidden: !product.isHidden })}
+                  className={`h-7 w-7 border border-dotted border-border ${product.isHidden ? "text-muted-foreground" : ""}`}
+                  title={product.isHidden ? "show product" : "hide product"}
+                  data-testid={`button-toggle-hidden-${product.id}`}
+                >
+                  {product.isHidden ? <Eye className="h-3 w-3" /> : <EyeOff className="h-3 w-3" />}
+                </Button>
                 <Button
                   size="icon"
                   variant="secondary"

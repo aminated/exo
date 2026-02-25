@@ -18,6 +18,7 @@ export const products = pgTable("products", {
   unitPrice: decimal("unit_price", { precision: 10, scale: 2 }).notNull(),
   description: text("description"),
   inStock: boolean("in_stock").notNull().default(true),
+  isHidden: boolean("is_hidden").notNull().default(false),
 });
 
 export const blogPosts = pgTable("blog_posts", {

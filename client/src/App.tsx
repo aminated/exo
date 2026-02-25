@@ -94,7 +94,7 @@ function Layout({ children }: { children: React.ReactNode }) {
             <span className="text-amber-400 font-bold text-lg">"</span>
           </div>
           <div className="text-xs text-muted-foreground/50">
-            all transactions are final. ship worldwide.
+            in god we trust. all others must bring data.
           </div>
         </div>
       </footer>

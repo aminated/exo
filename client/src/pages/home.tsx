@@ -3,6 +3,7 @@ import { Link } from "wouter";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Loader2 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
@@ -184,6 +185,13 @@ function PaymentSection({
   clearCart: () => void;
 }) {
   const [selectedPayment, setSelectedPayment] = useState<string>("btc");
+  const [shippingInfo, setShippingInfo] = useState({
+    firstName: "", lastName: "", country: "", streetAddress: "",
+    city: "", state: "", zipCode: "", email: "",
+  });
+  const [serviceInfo, setServiceInfo] = useState({
+    expectedCompound: "", signalSimplex: "",
+  });
   const { toast } = useToast();
 
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
@@ -204,24 +212,51 @@ function PaymentSection({
         .filter(Boolean)
     : [];
 
+  const hasProducts = products
+    ? Object.entries(cart).some(([id, qty]) => {
+        const product = products.find((p) => p.id === Number(id));
+        return product && qty > 0 && product.category !== "service";
+      })
+    : false;
+
+  const hasServices = products
+    ? Object.entries(cart).some(([id, qty]) => {
+        const product = products.find((p) => p.id === Number(id));
+        return product && qty > 0 && product.category === "service";
+      })
+    : false;
+
+  const shippingValid = !hasProducts || (
+    shippingInfo.firstName && shippingInfo.lastName && shippingInfo.country &&
+    shippingInfo.streetAddress && shippingInfo.city && shippingInfo.state &&
+    shippingInfo.zipCode && shippingInfo.email
+  );
+
+  const serviceValid = !hasServices || (
+    serviceInfo.expectedCompound && serviceInfo.signalSimplex
+  );
+
   const checkoutMutation = useMutation({
     mutationFn: async () => {
-      const res = await apiRequest("POST", "/api/checkout", {
+      const body: Record<string, unknown> = {
         items: cartItems,
         totalPrice,
         paymentMethod: selectedPayment,
-      });
+      };
+      if (hasProducts) body.shippingInfo = shippingInfo;
+      if (hasServices) body.serviceInfo = serviceInfo;
+      const res = await apiRequest("POST", "/api/checkout", body);
       return await res.json();
     },
-    onSuccess: (data: { configured: boolean; checkoutUrl?: string; orderId: number; message?: string }) => {
+    onSuccess: (data: { configured: boolean; checkoutUrl?: string; orderUid: string; message?: string }) => {
       if (data.configured && data.checkoutUrl) {
         clearCart();
         window.open(data.checkoutUrl, "_blank");
-        toast({ title: `order #${data.orderId} created — redirecting to payment` });
+        toast({ title: `order ${data.orderUid} created — redirecting to payment` });
       } else {
         clearCart();
         toast({
-          title: `order #${data.orderId} created`,
+          title: `order ${data.orderUid} created`,
           description: "bitcart is not configured yet. set up your bitcart instance to enable payment processing.",
         });
       }
@@ -236,6 +271,12 @@ function PaymentSection({
     { id: "ltc", label: "litecoin (ltc)" },
     { id: "xmr", label: "monero (xmr)" },
   ];
+
+  const updateShipping = (field: string, value: string) =>
+    setShippingInfo((prev) => ({ ...prev, [field]: value }));
+
+  const updateService = (field: string, value: string) =>
+    setServiceInfo((prev) => ({ ...prev, [field]: value }));
 
   return (
     <div className="mt-8 border border-dotted border-border rounded-md p-5" data-testid="section-payment">
@@ -267,6 +308,62 @@ function PaymentSection({
         instantly upon entering the txid.
       </p>
 
+      {totalItems > 0 && hasProducts && (
+        <div className="border-t border-dotted border-border pt-4 mb-4" data-testid="section-shipping-form">
+          <h4 className="text-xs font-bold tracking-wider text-amber-400 mb-3">shipping details:</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">first name</label>
+              <Input value={shippingInfo.firstName} onChange={(e) => updateShipping("firstName", e.target.value)} className="border-dotted" data-testid="input-shipping-firstname" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">last name</label>
+              <Input value={shippingInfo.lastName} onChange={(e) => updateShipping("lastName", e.target.value)} className="border-dotted" data-testid="input-shipping-lastname" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">country/region</label>
+              <Input value={shippingInfo.country} onChange={(e) => updateShipping("country", e.target.value)} className="border-dotted" data-testid="input-shipping-country" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">street address</label>
+              <Input value={shippingInfo.streetAddress} onChange={(e) => updateShipping("streetAddress", e.target.value)} className="border-dotted" data-testid="input-shipping-street" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">town/city</label>
+              <Input value={shippingInfo.city} onChange={(e) => updateShipping("city", e.target.value)} className="border-dotted" data-testid="input-shipping-city" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">state</label>
+              <Input value={shippingInfo.state} onChange={(e) => updateShipping("state", e.target.value)} className="border-dotted" data-testid="input-shipping-state" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">zip code</label>
+              <Input value={shippingInfo.zipCode} onChange={(e) => updateShipping("zipCode", e.target.value)} className="border-dotted" data-testid="input-shipping-zip" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">email address</label>
+              <Input value={shippingInfo.email} onChange={(e) => updateShipping("email", e.target.value)} type="email" className="border-dotted" data-testid="input-shipping-email" />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {totalItems > 0 && hasServices && (
+        <div className="border-t border-dotted border-border pt-4 mb-4" data-testid="section-service-form">
+          <h4 className="text-xs font-bold tracking-wider text-amber-400 mb-3">service details:</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">expected compound</label>
+              <Input value={serviceInfo.expectedCompound} onChange={(e) => updateService("expectedCompound", e.target.value)} className="border-dotted" data-testid="input-service-compound" />
+            </div>
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">signal/simplex</label>
+              <Input value={serviceInfo.signalSimplex} onChange={(e) => updateService("signalSimplex", e.target.value)} className="border-dotted" data-testid="input-service-signal" />
+            </div>
+          </div>
+        </div>
+      )}
+
       {totalItems > 0 && (
         <div className="border-t border-dotted border-border pt-4 pb-2 flex flex-col items-center gap-3">
           <div className="text-sm text-center">
@@ -281,7 +378,7 @@ function PaymentSection({
           <Button
             variant="default"
             className="gap-2 bg-white text-black hover:bg-neutral-200 border border-dotted border-white/40"
-            disabled={checkoutMutation.isPending}
+            disabled={checkoutMutation.isPending || !shippingValid || !serviceValid}
             onClick={() => checkoutMutation.mutate()}
             data-testid="button-checkout"
           >

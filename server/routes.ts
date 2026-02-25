@@ -1,7 +1,8 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
+import crypto from "crypto";
 import { storage } from "./storage";
-import { insertProductSchema, insertBlogPostSchema } from "@shared/schema";
+import { insertProductSchema, insertBlogPostSchema, shippingInfoSchema, serviceInfoSchema } from "@shared/schema";
 
 const BITCART_API_URL = process.env.BITCART_API_URL;
 const BITCART_API_TOKEN = process.env.BITCART_API_TOKEN;
@@ -169,7 +170,7 @@ export async function registerRoutes(
 
   app.post("/api/checkout", async (req, res) => {
     try {
-      const { items, paymentMethod } = req.body;
+      const { items, paymentMethod, shippingInfo, serviceInfo } = req.body;
 
       if (!items || !Array.isArray(items) || items.length === 0) {
         return res.status(400).json({ message: "Cart is empty" });
@@ -182,6 +183,8 @@ export async function registerRoutes(
 
       let computedTotal = 0;
       const verifiedItems = [];
+      let hasProducts = false;
+      let hasServices = false;
       for (const item of items) {
         if (!item.productId || !item.quantity || item.quantity < 1) {
           return res.status(400).json({ message: "Invalid item in cart" });
@@ -193,20 +196,49 @@ export async function registerRoutes(
         if (!product.inStock) {
           return res.status(400).json({ message: `${product.name} is out of stock` });
         }
+        if (product.category === "service") {
+          hasServices = true;
+        } else {
+          hasProducts = true;
+        }
         computedTotal += Number(product.unitPrice) * item.quantity;
-        verifiedItems.push({ productId: product.id, name: product.name, quantity: item.quantity, unitPrice: product.unitPrice });
+        verifiedItems.push({ productId: product.id, name: product.name, quantity: item.quantity, unitPrice: product.unitPrice, category: product.category });
       }
 
+      let validatedShipping = null;
+      let validatedService = null;
+
+      if (hasProducts) {
+        const parsed = shippingInfoSchema.safeParse(shippingInfo);
+        if (!parsed.success) {
+          return res.status(400).json({ message: "Shipping information is required for physical products" });
+        }
+        validatedShipping = parsed.data;
+      }
+
+      if (hasServices) {
+        const parsed = serviceInfoSchema.safeParse(serviceInfo);
+        if (!parsed.success) {
+          return res.status(400).json({ message: "Service information is required for service items" });
+        }
+        validatedService = parsed.data;
+      }
+
+      const orderUid = crypto.randomBytes(8).toString("hex");
+
       const order = await storage.createOrder({
+        orderUid,
         items: JSON.stringify(verifiedItems),
         totalPrice: computedTotal.toFixed(2),
         paymentMethod,
+        shippingInfo: validatedShipping ? JSON.stringify(validatedShipping) : null,
+        serviceInfo: validatedService ? JSON.stringify(validatedService) : null,
         status: "pending",
       });
 
       if (!BITCART_API_URL || !BITCART_API_TOKEN || !BITCART_STORE_ID) {
         return res.json({
-          orderId: order.id,
+          orderUid: order.orderUid,
           message: "Order created. BitCart is not configured yet — set BITCART_API_URL, BITCART_API_TOKEN, and BITCART_STORE_ID to enable payment processing.",
           configured: false,
         });
@@ -221,7 +253,7 @@ export async function registerRoutes(
         body: JSON.stringify({
           price: computedTotal,
           store_id: BITCART_STORE_ID,
-          order_id: `order-${order.id}`,
+          order_id: `order-${order.orderUid}`,
           currency: paymentMethod.toUpperCase(),
         }),
       });
@@ -236,7 +268,7 @@ export async function registerRoutes(
       await storage.updateOrderBitcartId(order.id, invoice.id);
 
       res.json({
-        orderId: order.id,
+        orderUid: order.orderUid,
         invoiceId: invoice.id,
         checkoutUrl: invoice.checkout_url || `${BITCART_API_URL}/i/${invoice.id}`,
         configured: true,

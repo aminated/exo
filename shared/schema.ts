@@ -19,6 +19,7 @@ export const products = pgTable("products", {
   description: text("description"),
   inStock: boolean("in_stock").notNull().default(true),
   isHidden: boolean("is_hidden").notNull().default(false),
+  category: text("category").notNull().default("product"),
 });
 
 export const blogPosts = pgTable("blog_posts", {
@@ -34,9 +35,12 @@ export const blogPosts = pgTable("blog_posts", {
 
 export const orders = pgTable("orders", {
   id: serial("id").primaryKey(),
+  orderUid: text("order_uid").notNull().unique(),
   items: text("items").notNull(),
   totalPrice: decimal("total_price", { precision: 10, scale: 2 }).notNull(),
   paymentMethod: text("payment_method").notNull(),
+  shippingInfo: text("shipping_info"),
+  serviceInfo: text("service_info"),
   bitcartInvoiceId: text("bitcart_invoice_id"),
   status: text("status").notNull().default("pending"),
   createdAt: timestamp("created_at").defaultNow(),
@@ -68,3 +72,22 @@ export const insertOrderSchema = createInsertSchema(orders).omit({
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type Order = typeof orders.$inferSelect;
 export type InsertOrder = z.infer<typeof insertOrderSchema>;
+
+export const shippingInfoSchema = z.object({
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  country: z.string().min(1),
+  streetAddress: z.string().min(1),
+  city: z.string().min(1),
+  state: z.string().min(1),
+  zipCode: z.string().min(1),
+  email: z.string().email(),
+});
+
+export const serviceInfoSchema = z.object({
+  expectedCompound: z.string().min(1),
+  signalSimplex: z.string().min(1),
+});
+
+export type ShippingInfo = z.infer<typeof shippingInfoSchema>;
+export type ServiceInfo = z.infer<typeof serviceInfoSchema>;

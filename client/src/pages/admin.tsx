@@ -83,6 +83,7 @@ function ProductForm({
     description: product?.description || "",
     inStock: product?.inStock ?? true,
     isHidden: product?.isHidden ?? false,
+    category: product?.category || "product",
   });
 
   const mutation = useMutation({
@@ -174,6 +175,35 @@ function ProductForm({
             className="border-dotted"
             data-testid="input-product-price"
           />
+        </div>
+        <div>
+          <label className="text-xs text-muted-foreground mb-1 block">category</label>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => updateField("category", "product")}
+              className={`px-4 py-2 rounded-md text-xs tracking-wider border ${
+                form.category === "product"
+                  ? "bg-amber-700/15 border-dotted border-amber-600/50 text-amber-400"
+                  : "border-dotted border-border text-muted-foreground"
+              }`}
+              data-testid="input-product-category-product"
+            >
+              product
+            </button>
+            <button
+              type="button"
+              onClick={() => updateField("category", "service")}
+              className={`px-4 py-2 rounded-md text-xs tracking-wider border ${
+                form.category === "service"
+                  ? "bg-amber-700/15 border-dotted border-amber-600/50 text-amber-400"
+                  : "border-dotted border-border text-muted-foreground"
+              }`}
+              data-testid="input-product-category-service"
+            >
+              service
+            </button>
+          </div>
         </div>
         <div className="flex items-end gap-4">
           <label className="text-xs text-muted-foreground flex items-center gap-2">
@@ -448,7 +478,7 @@ function ProductsManager() {
                   {product.name}
                 </div>
                 <div className="text-xs text-muted-foreground">
-                  ${Number(product.unitPrice).toFixed(2)} · {product.inStock ? "in stock" : "out of stock"}{product.isHidden ? " · hidden" : ""}
+                  ${Number(product.unitPrice).toFixed(2)} · {product.category} · {product.inStock ? "in stock" : "out of stock"}{product.isHidden ? " · hidden" : ""}
                 </div>
               </div>
               <div className="flex gap-1.5">

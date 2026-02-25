@@ -2,7 +2,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { Link } from "wouter";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Minus, Plus, ShoppingCart, Loader2 } from "lucide-react";
+import { ShoppingCart, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
 import type { Product } from "@shared/schema";
@@ -99,7 +99,7 @@ export default function Home() {
                           className="h-7 w-7 text-xs border border-dotted border-border"
                           data-testid={`button-minus-${product.id}`}
                         >
-                          <Minus className="h-3 w-3" />
+                          <span className="text-sm font-bold leading-none">−</span>
                         </Button>
                         <span
                           className="w-8 text-center font-mono tabular-nums"
@@ -115,7 +115,7 @@ export default function Home() {
                           className="h-7 w-7 text-xs border border-dotted border-border"
                           data-testid={`button-plus-${product.id}`}
                         >
-                          <Plus className="h-3 w-3" />
+                          <span className="text-sm font-bold leading-none">+</span>
                         </Button>
                       </div>
                     </td>

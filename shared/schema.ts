@@ -117,7 +117,9 @@ export const shippingInfoSchema = z.object({
 });
 
 export const serviceInfoSchema = z.object({
+  clientName: z.string().min(1),
   expectedCompound: z.string().min(1),
+  manufacturer: z.string().min(1),
   signalSimplex: z.string().min(1),
 });
 

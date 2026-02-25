@@ -190,7 +190,7 @@ function PaymentSection({
     city: "", state: "", zipCode: "", email: "",
   });
   const [serviceInfo, setServiceInfo] = useState({
-    expectedCompound: "", signalSimplex: "",
+    clientName: "", expectedCompound: "", manufacturer: "", signalSimplex: "",
   });
   const { toast } = useToast();
 
@@ -233,7 +233,7 @@ function PaymentSection({
   );
 
   const serviceValid = !hasServices || (
-    serviceInfo.expectedCompound && serviceInfo.signalSimplex
+    serviceInfo.clientName && serviceInfo.expectedCompound && serviceInfo.manufacturer && serviceInfo.signalSimplex
   );
 
   const checkoutMutation = useMutation({
@@ -352,11 +352,19 @@ function PaymentSection({
         <div className="border-t border-dotted border-border pt-4 mb-4" data-testid="section-service-form">
           <h4 className="text-xs font-bold tracking-wider text-amber-400 mb-3">service details:</h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="sm:col-span-2">
+              <label className="text-xs text-muted-foreground mb-1 block">client name</label>
+              <Input value={serviceInfo.clientName} onChange={(e) => updateService("clientName", e.target.value)} className="border-dotted" data-testid="input-service-client" />
+            </div>
             <div>
               <label className="text-xs text-muted-foreground mb-1 block">expected compound</label>
               <Input value={serviceInfo.expectedCompound} onChange={(e) => updateService("expectedCompound", e.target.value)} className="border-dotted" data-testid="input-service-compound" />
             </div>
             <div>
+              <label className="text-xs text-muted-foreground mb-1 block">manufacturer</label>
+              <Input value={serviceInfo.manufacturer} onChange={(e) => updateService("manufacturer", e.target.value)} className="border-dotted" data-testid="input-service-manufacturer" />
+            </div>
+            <div className="sm:col-span-2">
               <label className="text-xs text-muted-foreground mb-1 block">signal/simplex</label>
               <Input value={serviceInfo.signalSimplex} onChange={(e) => updateService("signalSimplex", e.target.value)} className="border-dotted" data-testid="input-service-signal" />
             </div>

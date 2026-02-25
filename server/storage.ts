@@ -1,6 +1,6 @@
-import { type Product, type InsertProduct, type BlogPost, type InsertBlogPost, type Order, type InsertOrder, type SitePage, products, blogPosts, orders, sitePages } from "@shared/schema";
+import { type Product, type InsertProduct, type BlogPost, type InsertBlogPost, type Order, type InsertOrder, type SitePage, type TestResult, type InsertTestResult, products, blogPosts, orders, sitePages, testResults } from "@shared/schema";
 import { db } from "./db";
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export interface IStorage {
   getProducts(): Promise<Product[]>;
@@ -19,6 +19,11 @@ export interface IStorage {
   updateOrderBitcartId(id: number, bitcartInvoiceId: string): Promise<Order | undefined>;
   getSitePage(slug: string): Promise<SitePage | undefined>;
   upsertSitePage(slug: string, title: string, content: string): Promise<SitePage>;
+  getTestResults(): Promise<TestResult[]>;
+  getTestResultByUid(uid: string): Promise<TestResult | undefined>;
+  createTestResult(result: InsertTestResult): Promise<TestResult>;
+  updateTestResult(id: number, result: Partial<InsertTestResult>): Promise<TestResult | undefined>;
+  deleteTestResult(id: number): Promise<boolean>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -103,6 +108,30 @@ export class DatabaseStorage implements IStorage {
     }
     const [created] = await db.insert(sitePages).values({ slug, title, content }).returning();
     return created;
+  }
+
+  async getTestResults(): Promise<TestResult[]> {
+    return await db.select().from(testResults).orderBy(desc(testResults.createdAt));
+  }
+
+  async getTestResultByUid(uid: string): Promise<TestResult | undefined> {
+    const [result] = await db.select().from(testResults).where(eq(testResults.uid, uid));
+    return result;
+  }
+
+  async createTestResult(result: InsertTestResult): Promise<TestResult> {
+    const [created] = await db.insert(testResults).values(result).returning();
+    return created;
+  }
+
+  async updateTestResult(id: number, result: Partial<InsertTestResult>): Promise<TestResult | undefined> {
+    const [updated] = await db.update(testResults).set(result).where(eq(testResults.id, id)).returning();
+    return updated;
+  }
+
+  async deleteTestResult(id: number): Promise<boolean> {
+    const res = await db.delete(testResults).where(eq(testResults.id, id)).returning();
+    return res.length > 0;
   }
 }
 

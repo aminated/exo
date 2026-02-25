@@ -1,7 +1,7 @@
 # Supplements Shop
 
 ## Overview
-A supplement e-commerce site inspired by inject.soy. Features a product catalog with individual product pages, a blog/musings section, and cryptocurrency payment options. Black background with gold/amber accents, Doto font in bold, all-lowercase aesthetic.
+A supplement e-commerce site inspired by inject.soy. Features a product catalog with individual product pages, a blog/musings section, lab test results (Janoshik-style), and cryptocurrency payment options. Black background with gold/amber accents, Doto font in bold, all-lowercase aesthetic.
 
 ## Recent Changes
 - 2026-02-24: Initial build - full-stack supplement shop with products, blog, crypto payments
@@ -13,10 +13,11 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - 2026-02-25: Order IDs are now non-sequential (random hex UIDs)
 - 2026-02-25: Products can be hidden from public listing via admin toggle
 - 2026-02-25: Terms of Service page added, editable from admin "pages" tab
+- 2026-02-25: Test results page added (Janoshik-style) with chromatogram image uploads
 
 ## Architecture
 - **Frontend**: React + Vite + TailwindCSS + shadcn/ui with black background, bold Doto font, gold accents
-- **Backend**: Express.js with PostgreSQL (Drizzle ORM)
+- **Backend**: Express.js with PostgreSQL (Drizzle ORM), multer for file uploads
 - **Routing**: wouter for client-side routing
 - **State**: TanStack Query for server state, local state for cart
 
@@ -25,8 +26,10 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - `/musings/:slug` - Individual blog post
 - `/products` - Product listing with table, quantity controls, payment method selection
 - `/product/:slug` - Individual product detail page with description
+- `/results` - Test results listing (Janoshik-style table)
+- `/results/:uid` - Individual test result detail with chromatograms
 - `/terms` - Terms of service (editable from admin)
-- `/admin` - Admin portal (password-protected) for managing products, blog posts, and pages
+- `/admin` - Admin portal (password-protected) for managing products, blog posts, results, and pages
 
 ## Admin Portal
 - Password-based auth using express-session with PostgreSQL session store
@@ -36,6 +39,7 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - Products have category: "product" (physical, needs shipping) or "service" (needs compound + signal/simplex)
 - CRUD for blog posts: create, edit title/slug/content/excerpt/isLocked/lockPassword, delete
 - Locked posts: admin can mark posts as "private entry" with a password
+- CRUD for test results: uid, order uid (links to service order), testing ordered, sample received, client name, sample, manufacturer, free text results, chromatogram image uploads
 - Pages tab: edit terms of service content (stored in site_pages table)
 
 ## Checkout Flow
@@ -55,6 +59,7 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - `blogPosts` - title, slug, content, excerpt, isLocked, lockPassword, publishedAt
 - `orders` - orderUid (random hex), items (JSON), totalPrice, paymentMethod, shippingInfo (JSON), serviceInfo (JSON), bitcartInvoiceId, status, createdAt
 - `sitePages` - slug, title, content, updatedAt
+- `testResults` - uid, orderUid, testingOrdered, sampleReceived, clientName, sample, manufacturer, results, chromatograms (JSON array of image URLs), createdAt
 
 ## Project Structure
 - `client/src/pages/` - Page components
@@ -62,3 +67,4 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - `server/db.ts` - Database connection
 - `server/seed.ts` - Seed data
 - `shared/schema.ts` - Drizzle schemas and types
+- `uploads/` - Uploaded chromatogram images (served statically)

@@ -1,8 +1,20 @@
 import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import crypto from "crypto";
+import path from "path";
+import multer from "multer";
 import { storage } from "./storage";
-import { insertProductSchema, insertBlogPostSchema, shippingInfoSchema, serviceInfoSchema } from "@shared/schema";
+import { insertProductSchema, insertBlogPostSchema, insertTestResultSchema, shippingInfoSchema, serviceInfoSchema } from "@shared/schema";
+
+const uploadDir = path.join(process.cwd(), "uploads");
+const uploadStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => cb(null, uploadDir),
+  filename: (_req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `${crypto.randomBytes(12).toString("hex")}${ext}`);
+  },
+});
+const upload = multer({ storage: uploadStorage, limits: { fileSize: 10 * 1024 * 1024 } });
 
 const BITCART_API_URL = process.env.BITCART_API_URL;
 const BITCART_API_TOKEN = process.env.BITCART_API_TOKEN;
@@ -166,6 +178,62 @@ export async function registerRoutes(
     const deleted = await storage.deleteBlogPost(id);
     if (!deleted) return res.status(404).json({ message: "Post not found" });
     res.json({ success: true });
+  });
+
+  app.use("/uploads", (await import("express")).default.static(uploadDir));
+
+  app.get("/api/results", async (_req, res) => {
+    const results = await storage.getTestResults();
+    res.json(results);
+  });
+
+  app.get("/api/results/:uid", async (req, res) => {
+    const result = await storage.getTestResultByUid(req.params.uid);
+    if (!result) return res.status(404).json({ message: "Result not found" });
+    res.json(result);
+  });
+
+  app.get("/api/admin/results", requireAdmin, async (_req, res) => {
+    const results = await storage.getTestResults();
+    res.json(results);
+  });
+
+  app.post("/api/admin/results", requireAdmin, async (req, res) => {
+    const parsed = insertTestResultSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid result data", errors: parsed.error.flatten() });
+    }
+    const result = await storage.createTestResult(parsed.data);
+    res.status(201).json(result);
+  });
+
+  app.patch("/api/admin/results/:id", requireAdmin, async (req, res) => {
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+    const parsed = insertTestResultSchema.partial().safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ message: "Invalid result data", errors: parsed.error.flatten() });
+    }
+    const result = await storage.updateTestResult(id, parsed.data);
+    if (!result) return res.status(404).json({ message: "Result not found" });
+    res.json(result);
+  });
+
+  app.delete("/api/admin/results/:id", requireAdmin, async (req, res) => {
+    const id = parseInt(String(req.params.id));
+    if (isNaN(id)) return res.status(400).json({ message: "Invalid ID" });
+    const deleted = await storage.deleteTestResult(id);
+    if (!deleted) return res.status(404).json({ message: "Result not found" });
+    res.json({ success: true });
+  });
+
+  app.post("/api/admin/upload", requireAdmin, upload.array("files", 10), (req, res) => {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
+    }
+    const urls = files.map((f) => `/uploads/${f.filename}`);
+    res.json({ urls });
   });
 
   app.get("/api/pages/:slug", async (req, res) => {

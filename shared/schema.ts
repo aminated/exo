@@ -83,6 +83,28 @@ export const sitePages = pgTable("site_pages", {
 
 export type SitePage = typeof sitePages.$inferSelect;
 
+export const testResults = pgTable("test_results", {
+  id: serial("id").primaryKey(),
+  uid: text("uid").notNull().unique(),
+  orderUid: text("order_uid"),
+  testingOrdered: text("testing_ordered"),
+  sampleReceived: text("sample_received"),
+  clientName: text("client_name"),
+  sample: text("sample"),
+  manufacturer: text("manufacturer"),
+  results: text("results"),
+  chromatograms: text("chromatograms").notNull().default("[]"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const insertTestResultSchema = createInsertSchema(testResults).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type TestResult = typeof testResults.$inferSelect;
+export type InsertTestResult = z.infer<typeof insertTestResultSchema>;
+
 export const shippingInfoSchema = z.object({
   firstName: z.string().min(1),
   lastName: z.string().min(1),

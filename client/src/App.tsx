@@ -10,7 +10,9 @@ import Musings from "@/pages/musings";
 import PostDetail from "@/pages/post-detail";
 import Admin from "@/pages/admin";
 import Terms from "@/pages/terms";
-import { Package, Pen } from "lucide-react";
+import Results from "@/pages/results";
+import ResultDetail from "@/pages/result-detail";
+import { Package, Pen, FlaskConical } from "lucide-react";
 
 function NavLink({
   href,
@@ -79,6 +81,10 @@ function Layout({ children }: { children: React.ReactNode }) {
               <Package className="h-3.5 w-3.5" />
               products
             </NavLink>
+            <NavLink href="/results" matchPrefix="/results">
+              <FlaskConical className="h-3.5 w-3.5" />
+              results
+            </NavLink>
           </nav>
         </div>
       </header>
@@ -115,6 +121,8 @@ function Router() {
         <Route path="/musings/:slug" component={PostDetail} />
         <Route path="/products" component={Home} />
         <Route path="/product/:slug" component={ProductDetail} />
+        <Route path="/results" component={Results} />
+        <Route path="/results/:uid" component={ResultDetail} />
         <Route path="/terms" component={Terms} />
         <Route path="/admin" component={Admin} />
         <Route component={NotFound} />

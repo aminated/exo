@@ -1138,7 +1138,7 @@ function OrdersManager() {
 
                     {order.bitcartInvoiceId && (
                       <div className="text-xs text-muted-foreground">
-                        bitcart invoice: <span className="font-mono">{order.bitcartInvoiceId}</span>
+                        btcpay invoice: <span className="font-mono">{order.bitcartInvoiceId}</span>
                       </div>
                     )}
                   </div>

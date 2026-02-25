@@ -1,14 +1,13 @@
 # Supplements Shop
 
 ## Overview
-A supplement e-commerce site inspired by inject.soy. Features a product catalog with individual product pages, a blog/musings section, lab test results (Janoshik-style), coupon system, and cryptocurrency payment options. Black background with gold/amber accents, Doto font in bold, all-lowercase aesthetic.
+A supplement e-commerce site inspired by inject.soy. Features a product catalog with individual product pages, a blog/musings section, lab test results (Janoshik-style), coupon system, and cryptocurrency payment options via BTCPay Server. Black background with gold/amber accents, Doto font in bold, all-lowercase aesthetic.
 
 ## Recent Changes
 - 2026-02-24: Initial build - full-stack supplement shop with products, blog, crypto payments
 - 2026-02-24: Theme updated to black background, bold font, gold/amber accents on dark
 - 2026-02-24: Admin portal added at /admin with product and blog post management
 - 2026-02-24: Musings moved to front page (/), products moved to /products
-- 2026-02-24: BitCart crypto payment integration added (requires BITCART_API_URL, BITCART_API_TOKEN, BITCART_STORE_ID)
 - 2026-02-25: Products now have category ("product" or "service") with different checkout forms
 - 2026-02-25: Order IDs are now non-sequential (random hex UIDs)
 - 2026-02-25: Products can be hidden from public listing via admin toggle
@@ -16,6 +15,8 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - 2026-02-25: Test results page added (Janoshik-style) with chromatogram image uploads
 - 2026-02-25: Site banner added (editable/toggleable from admin pages tab)
 - 2026-02-25: Coupon system added with admin CRUD and checkout integration
+- 2026-02-25: Switched from BitCart to BTCPay Server for crypto payment processing
+- 2026-02-25: Admin orders tab with search, filtering, and sorting
 
 ## Architecture
 - **Frontend**: React + Vite + TailwindCSS + shadcn/ui with black background, bold Doto font, gold accents
@@ -31,25 +32,26 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - `/results` - Test results listing (Janoshik-style table)
 - `/results/:uid` - Individual test result detail with chromatograms
 - `/terms` - Terms of service (editable from admin)
-- `/admin` - Admin portal (password-protected) for managing products, blog posts, results, coupons, and pages
+- `/admin` - Admin portal (password-protected) for managing products, blog posts, results, orders, coupons, and pages
 
 ## Admin Portal
 - Password-based auth using express-session with PostgreSQL session store
 - ADMIN_USERNAME + ADMIN_PASSWORD env vars required for login
-- Tabs: products, blog posts, results, coupons, pages
+- Tabs: products, blog posts, results, orders, coupons, pages
 - CRUD for products: create, edit name/slug/concentration/type/price/description/inStock/isHidden/category, delete
 - Products can be toggled hidden (eye icon) to hide from public listing
 - Products have category: "product" (physical, needs shipping) or "service" (needs compound + signal/simplex)
 - CRUD for blog posts: create, edit title/slug/content/excerpt/isLocked/lockPassword, delete
 - Locked posts: admin can mark posts as "private entry" with a password
 - CRUD for test results: uid, order uid, testing ordered, sample received, client name, sample, manufacturer, free text results, chromatogram image uploads
+- Orders tab: view all orders with search (name, email, order ID, product), filter by status/payment method/date range, sort by date/price
 - CRUD for coupons: code, discount type (percentage/fixed), discount value, min order amount, max uses, active toggle
 - Pages tab: site banner (text + enable/disable), terms of service content
 
 ## Coupon System
 - Admin creates coupons with code, discount type (percentage or fixed $), discount value, optional min order amount, optional max uses
 - Coupons can be toggled active/inactive
-- Customers enter coupon code at checkout, validated against server
+- Customers enter coupon code at checkout (press Enter to apply), validated against server
 - Discount applied server-side during checkout; coupon usage count incremented on successful order
 - Original and discounted prices shown with strikethrough effect
 
@@ -61,15 +63,16 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - Mixed carts show both forms
 - All info stored as JSON in orders table
 
-## BitCart Integration
-- Checkout creates an order with random UID, then calls BitCart API to create an invoice
-- If BitCart is not configured (env vars missing), orders are still saved but no invoice is created
-- Requires: BITCART_API_URL, BITCART_API_TOKEN, BITCART_STORE_ID env vars
+## BTCPay Server Integration
+- Checkout creates an order with random UID, then calls BTCPay Server Greenfield API to create an invoice
+- Maps payment methods: BTC → BTC-OnChain + BTC-LightningNetwork, LTC → LTC-OnChain, XMR → XMR-MoneroLike
+- If BTCPay is not configured (env vars missing), orders are still saved but no invoice is created
+- Requires: BTCPAY_URL, BTCPAY_API_KEY, BTCPAY_STORE_ID env vars
 
 ## Data Models
 - `products` - name, slug, concentration, type, unitPrice, description, inStock, isHidden, category
 - `blogPosts` - title, slug, content, excerpt, isLocked, lockPassword, publishedAt
-- `orders` - orderUid (random hex), items (JSON), totalPrice, paymentMethod, shippingInfo (JSON), serviceInfo (JSON), bitcartInvoiceId, status, createdAt
+- `orders` - orderUid (random hex), items (JSON), totalPrice, paymentMethod, shippingInfo (JSON), serviceInfo (JSON), bitcartInvoiceId (stores BTCPay invoice ID), status, createdAt
 - `sitePages` - slug, title, content, updatedAt
 - `testResults` - uid, orderUid, testingOrdered, sampleReceived, clientName, sample, manufacturer, results, chromatograms (JSON array of image URLs), createdAt
 - `coupons` - code, discountType, discountValue, minOrderAmount, maxUses, usedCount, isActive, createdAt

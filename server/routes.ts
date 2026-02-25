@@ -16,9 +16,9 @@ const uploadStorage = multer.diskStorage({
 });
 const upload = multer({ storage: uploadStorage, limits: { fileSize: 10 * 1024 * 1024 } });
 
-const BITCART_API_URL = process.env.BITCART_API_URL;
-const BITCART_API_TOKEN = process.env.BITCART_API_TOKEN;
-const BITCART_STORE_ID = process.env.BITCART_STORE_ID;
+const BTCPAY_URL = process.env.BTCPAY_URL;
+const BTCPAY_API_KEY = process.env.BTCPAY_API_KEY;
+const BTCPAY_STORE_ID = process.env.BTCPAY_STORE_ID;
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -415,41 +415,53 @@ export async function registerRoutes(
         await storage.incrementCouponUsage(appliedCoupon.id);
       }
 
-      if (!BITCART_API_URL || !BITCART_API_TOKEN || !BITCART_STORE_ID) {
+      if (!BTCPAY_URL || !BTCPAY_API_KEY || !BTCPAY_STORE_ID) {
         return res.json({
           orderUid: order.orderUid,
-          message: "Order created. BitCart is not configured yet — set BITCART_API_URL, BITCART_API_TOKEN, and BITCART_STORE_ID to enable payment processing.",
+          message: "Order created. BTCPay Server is not configured yet — set BTCPAY_URL, BTCPAY_API_KEY, and BTCPAY_STORE_ID to enable payment processing.",
           configured: false,
         });
       }
 
-      const invoiceResponse = await fetch(`${BITCART_API_URL}/invoices`, {
+      const paymentMethodMap: Record<string, string[]> = {
+        btc: ["BTC-OnChain", "BTC-LightningNetwork"],
+        ltc: ["LTC-OnChain"],
+        xmr: ["XMR-MoneroLike"],
+      };
+
+      const invoiceResponse = await fetch(`${BTCPAY_URL}/api/v1/stores/${BTCPAY_STORE_ID}/invoices`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "Authorization": `Bearer ${BITCART_API_TOKEN}`,
+          "Authorization": `token ${BTCPAY_API_KEY}`,
         },
         body: JSON.stringify({
-          price: computedTotal,
-          store_id: BITCART_STORE_ID,
-          order_id: `order-${order.orderUid}`,
-          currency: paymentMethod.toUpperCase(),
+          amount: computedTotal,
+          currency: "USD",
+          metadata: {
+            orderId: order.orderUid,
+            paymentMethod: paymentMethod,
+          },
+          checkout: {
+            paymentMethods: paymentMethodMap[paymentMethod] || ["BTC-OnChain"],
+            speedPolicy: "MediumSpeed",
+          },
         }),
       });
 
       if (!invoiceResponse.ok) {
         const errorText = await invoiceResponse.text();
-        console.error("BitCart invoice creation failed:", errorText);
+        console.error("BTCPay invoice creation failed:", errorText);
         return res.status(502).json({ message: "Failed to create payment invoice" });
       }
 
-      const invoice = await invoiceResponse.json() as { id: string; checkout_url?: string };
+      const invoice = await invoiceResponse.json() as { id: string; checkoutLink?: string };
       await storage.updateOrderBitcartId(order.id, invoice.id);
 
       res.json({
         orderUid: order.orderUid,
         invoiceId: invoice.id,
-        checkoutUrl: invoice.checkout_url || `${BITCART_API_URL}/i/${invoice.id}`,
+        checkoutUrl: invoice.checkoutLink || `${BTCPAY_URL}/i/${invoice.id}`,
         configured: true,
       });
     } catch (error) {

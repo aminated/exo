@@ -279,7 +279,7 @@ function PaymentSection({
         clearCart();
         toast({
           title: `order ${data.orderUid} created`,
-          description: "bitcart is not configured yet. set up your bitcart instance to enable payment processing.",
+          description: "btcpay server is not configured yet. set BTCPAY_URL, BTCPAY_API_KEY, and BTCPAY_STORE_ID to enable payment processing.",
         });
       }
     },

@@ -396,27 +396,18 @@ function PaymentSection({
 
       {totalItems > 0 && (
         <div className="border-t border-dotted border-border pt-4 pb-2 flex flex-col items-center gap-3">
-          <div className="flex items-center justify-center gap-2 w-full max-w-sm mx-auto" data-testid="section-coupon">
-            <div className="relative flex-1">
+          <div className="w-full max-w-sm mx-auto" data-testid="section-coupon">
+            <div className="relative">
               <Tag className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
               <Input
                 value={couponCode}
                 onChange={(e) => { setCouponCode(e.target.value); setCouponError(""); }}
-                placeholder="coupon code"
+                onKeyDown={(e) => { if (e.key === "Enter" && couponCode && !applyCouponMutation.isPending) applyCouponMutation.mutate(); }}
+                placeholder="coupon code — press enter to apply"
                 className="border-dotted pl-8 font-mono text-xs"
                 data-testid="input-coupon-code"
               />
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-dotted text-xs"
-              disabled={!couponCode || applyCouponMutation.isPending}
-              onClick={() => applyCouponMutation.mutate()}
-              data-testid="button-apply-coupon"
-            >
-              {applyCouponMutation.isPending ? "..." : "apply"}
-            </Button>
           </div>
           {couponError && <p className="text-xs text-red-400" data-testid="text-coupon-error">{couponError}</p>}
           {appliedCoupon && (

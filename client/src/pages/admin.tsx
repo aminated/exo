@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock, EyeOff, Eye, FileText, FlaskConical, Upload, X, Tag } from "lucide-react";
-import type { Product, BlogPost, TestResult, Coupon } from "@shared/schema";
+import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock, EyeOff, Eye, FileText, FlaskConical, Upload, X, Tag, ShoppingCart, ChevronDown, ChevronUp } from "lucide-react";
+import type { Product, BlogPost, TestResult, Coupon, Order } from "@shared/schema";
 
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
   const [username, setUsername] = useState("");
@@ -903,6 +903,117 @@ function ResultsManager() {
   );
 }
 
+function OrdersManager() {
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  const { data: allOrders = [], isLoading } = useQuery<Order[]>({
+    queryKey: ["/api/admin/orders"],
+  });
+
+  if (isLoading) {
+    return <div className="h-40 bg-muted/30 animate-pulse rounded-md" />;
+  }
+
+  return (
+    <div>
+      <h3 className="text-sm font-bold tracking-wider mb-4">orders ({allOrders.length})</h3>
+
+      {allOrders.length === 0 && (
+        <div className="text-sm text-muted-foreground text-center py-8 border border-dotted border-border rounded-md">
+          no orders yet.
+        </div>
+      )}
+
+      {allOrders.length > 0 && (
+        <div className="space-y-2">
+          {allOrders.map((order) => {
+            const items = (() => { try { return JSON.parse(order.items); } catch { return []; } })();
+            const shipping = (() => { try { return order.shippingInfo ? JSON.parse(order.shippingInfo) : null; } catch { return null; } })();
+            const service = (() => { try { return order.serviceInfo ? JSON.parse(order.serviceInfo) : null; } catch { return null; } })();
+            const isExpanded = expandedId === order.id;
+
+            return (
+              <div key={order.id} className="border border-dotted border-border rounded-md" data-testid={`order-row-${order.id}`}>
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : order.id)}
+                  className="w-full p-4 flex items-center justify-between text-left"
+                  data-testid={`button-order-toggle-${order.id}`}
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="font-mono text-xs text-amber-400">{order.orderUid}</span>
+                      <span className={`text-xs px-2 py-0.5 rounded border border-dotted ${
+                        order.status === "pending" ? "text-yellow-400 border-yellow-600/30 bg-yellow-700/15" :
+                        order.status === "paid" ? "text-green-400 border-green-600/30 bg-green-700/15" :
+                        "text-muted-foreground border-border"
+                      }`}>{order.status}</span>
+                      <span className="font-mono text-sm font-bold">${order.totalPrice}</span>
+                      <span className="text-xs text-muted-foreground">{order.paymentMethod.toUpperCase()}</span>
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-1">
+                      {items.length} item{items.length !== 1 ? "s" : ""}
+                      {" · "}
+                      {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : ""}
+                    </div>
+                  </div>
+                  {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+                </button>
+
+                {isExpanded && (
+                  <div className="px-4 pb-4 space-y-3 border-t border-dotted border-border pt-3">
+                    <div>
+                      <h5 className="text-xs font-bold text-amber-400 mb-2">items</h5>
+                      <div className="space-y-1">
+                        {items.map((item: { name: string; quantity: number; unitPrice: string }, idx: number) => (
+                          <div key={idx} className="flex justify-between text-xs">
+                            <span>{item.name} × {item.quantity}</span>
+                            <span className="font-mono">${(Number(item.unitPrice) * item.quantity).toFixed(2)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    {shipping && (
+                      <div>
+                        <h5 className="text-xs font-bold text-amber-400 mb-2">shipping info</h5>
+                        <div className="text-xs text-muted-foreground space-y-0.5">
+                          <p>{shipping.firstName} {shipping.lastName}</p>
+                          <p>{shipping.streetAddress}</p>
+                          <p>{shipping.city}, {shipping.state} {shipping.zipCode}</p>
+                          <p>{shipping.country}</p>
+                          <p>{shipping.email}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {service && (
+                      <div>
+                        <h5 className="text-xs font-bold text-amber-400 mb-2">service info</h5>
+                        <div className="text-xs text-muted-foreground space-y-0.5">
+                          <p>client: {service.clientName}</p>
+                          <p>compound: {service.expectedCompound}</p>
+                          <p>manufacturer: {service.manufacturer}</p>
+                          <p>signal/simplex: {service.signalSimplex}</p>
+                        </div>
+                      </div>
+                    )}
+
+                    {order.bitcartInvoiceId && (
+                      <div className="text-xs text-muted-foreground">
+                        bitcart invoice: <span className="font-mono">{order.bitcartInvoiceId}</span>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function CouponsManager() {
   const { toast } = useToast();
   const [editing, setEditing] = useState<Coupon | null>(null);
@@ -1287,7 +1398,7 @@ function PagesManager() {
 }
 
 export default function Admin() {
-  const [tab, setTab] = useState<"products" | "posts" | "results" | "coupons" | "pages">("products");
+  const [tab, setTab] = useState<"products" | "posts" | "results" | "orders" | "coupons" | "pages">("products");
 
   const { data: authData, isLoading: authLoading } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
@@ -1376,6 +1487,18 @@ export default function Admin() {
           results
         </button>
         <button
+          onClick={() => setTab("orders")}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs tracking-wider transition-colors border ${
+            tab === "orders"
+              ? "bg-amber-700/15 text-amber-400 border-dotted border-amber-600/30"
+              : "text-muted-foreground border-dotted border-border hover:text-foreground"
+          }`}
+          data-testid="tab-orders"
+        >
+          <ShoppingCart className="h-3.5 w-3.5" />
+          orders
+        </button>
+        <button
           onClick={() => setTab("coupons")}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs tracking-wider transition-colors border ${
             tab === "coupons"
@@ -1404,6 +1527,7 @@ export default function Admin() {
       {tab === "products" && <ProductsManager />}
       {tab === "posts" && <PostsManager />}
       {tab === "results" && <ResultsManager />}
+      {tab === "orders" && <OrdersManager />}
       {tab === "coupons" && <CouponsManager />}
       {tab === "pages" && <PagesManager />}
     </div>

@@ -253,6 +253,11 @@ export async function registerRoutes(
     res.json(page);
   });
 
+  app.get("/api/admin/orders", requireAdmin, async (_req, res) => {
+    const allOrders = await storage.getOrders();
+    res.json(allOrders);
+  });
+
   app.get("/api/admin/coupons", requireAdmin, async (_req, res) => {
     const allCoupons = await storage.getCoupons();
     res.json(allCoupons);

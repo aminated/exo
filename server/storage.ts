@@ -24,6 +24,7 @@ export interface IStorage {
   createTestResult(result: InsertTestResult): Promise<TestResult>;
   updateTestResult(id: number, result: Partial<InsertTestResult>): Promise<TestResult | undefined>;
   deleteTestResult(id: number): Promise<boolean>;
+  getOrders(): Promise<Order[]>;
   getCoupons(): Promise<Coupon[]>;
   getCouponByCode(code: string): Promise<Coupon | undefined>;
   createCoupon(coupon: InsertCoupon): Promise<Coupon>;
@@ -139,6 +140,10 @@ export class DatabaseStorage implements IStorage {
     const res = await db.delete(testResults).where(eq(testResults.id, id)).returning();
     return res.length > 0;
   }
+  async getOrders(): Promise<Order[]> {
+    return await db.select().from(orders).orderBy(desc(orders.createdAt));
+  }
+
   async getCoupons(): Promise<Coupon[]> {
     return await db.select().from(coupons).orderBy(desc(coupons.createdAt));
   }

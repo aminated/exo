@@ -910,6 +910,102 @@ interface SitePage {
   updatedAt: string | null;
 }
 
+function BannerManager() {
+  const { toast } = useToast();
+  const [bannerText, setBannerText] = useState("");
+  const [bannerLoaded, setBannerLoaded] = useState(false);
+
+  const { data: bannerPage, isLoading: bannerLoading } = useQuery<SitePage>({
+    queryKey: ["/api/pages/banner"],
+  });
+
+  if (bannerPage && !bannerLoaded) {
+    setBannerText(bannerPage.content || "");
+    setBannerLoaded(true);
+  }
+
+  const saveBannerMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("PUT", "/api/admin/pages/banner", {
+        title: "banner",
+        content: bannerText,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/pages/banner"] });
+      toast({ title: "banner saved" });
+    },
+    onError: (err: Error) => {
+      toast({ title: err.message, variant: "destructive" });
+    },
+  });
+
+  const disableBannerMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("PUT", "/api/admin/pages/banner", {
+        title: "banner",
+        content: "",
+      });
+    },
+    onSuccess: () => {
+      setBannerText("");
+      queryClient.invalidateQueries({ queryKey: ["/api/pages/banner"] });
+      toast({ title: "banner disabled" });
+    },
+    onError: (err: Error) => {
+      toast({ title: err.message, variant: "destructive" });
+    },
+  });
+
+  if (bannerLoading) {
+    return <div className="h-20 bg-muted/30 animate-pulse rounded-md" />;
+  }
+
+  return (
+    <div>
+      <h3 className="text-sm font-bold tracking-wider mb-4">site banner</h3>
+      <div className="border border-dotted border-border rounded-md p-5 space-y-4">
+        <div>
+          <label className="text-xs text-muted-foreground mb-1 block">banner text (leave empty to disable)</label>
+          <Input
+            value={bannerText}
+            onChange={(e) => setBannerText(e.target.value)}
+            className="border-dotted"
+            placeholder="e.g. free shipping on orders over $100"
+            data-testid="input-banner-text"
+          />
+        </div>
+        {bannerText && (
+          <div className="bg-amber-700/15 border border-dotted border-amber-600/30 rounded-md px-4 py-2 text-center">
+            <p className="text-xs text-amber-400 tracking-wider">{bannerText}</p>
+          </div>
+        )}
+        <div className="flex gap-2">
+          <Button
+            onClick={() => saveBannerMutation.mutate()}
+            disabled={saveBannerMutation.isPending}
+            className="bg-white text-black hover:bg-neutral-200 border border-dotted border-white/40"
+            data-testid="button-banner-save"
+          >
+            {saveBannerMutation.isPending ? "saving..." : "save banner"}
+          </Button>
+          {bannerText && (
+            <Button
+              onClick={() => disableBannerMutation.mutate()}
+              disabled={disableBannerMutation.isPending}
+              variant="outline"
+              className="border-dotted text-red-400 hover:text-red-300 hover:bg-red-900/20"
+              data-testid="button-banner-disable"
+            >
+              {disableBannerMutation.isPending ? "disabling..." : "disable banner"}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function PagesManager() {
   const { toast } = useToast();
   const [content, setContent] = useState("");
@@ -945,28 +1041,31 @@ function PagesManager() {
   }
 
   return (
-    <div>
-      <h3 className="text-sm font-bold tracking-wider mb-4">terms of service</h3>
-      <div className="border border-dotted border-border rounded-md p-5 space-y-4">
-        <div>
-          <label className="text-xs text-muted-foreground mb-1 block">content</label>
-          <Textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            rows={16}
-            className="border-dotted font-mono text-xs"
-            placeholder="enter your terms of service here..."
-            data-testid="input-terms-content"
-          />
+    <div className="space-y-8">
+      <BannerManager />
+      <div>
+        <h3 className="text-sm font-bold tracking-wider mb-4">terms of service</h3>
+        <div className="border border-dotted border-border rounded-md p-5 space-y-4">
+          <div>
+            <label className="text-xs text-muted-foreground mb-1 block">content</label>
+            <Textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={16}
+              className="border-dotted font-mono text-xs"
+              placeholder="enter your terms of service here..."
+              data-testid="input-terms-content"
+            />
+          </div>
+          <Button
+            onClick={() => saveMutation.mutate()}
+            disabled={saveMutation.isPending}
+            className="bg-white text-black hover:bg-neutral-200 border border-dotted border-white/40"
+            data-testid="button-terms-save"
+          >
+            {saveMutation.isPending ? "saving..." : "save terms"}
+          </Button>
         </div>
-        <Button
-          onClick={() => saveMutation.mutate()}
-          disabled={saveMutation.isPending}
-          className="bg-white text-black hover:bg-neutral-200 border border-dotted border-white/40"
-          data-testid="button-terms-save"
-        >
-          {saveMutation.isPending ? "saving..." : "save terms"}
-        </Button>
       </div>
     </div>
   );

@@ -1,6 +1,6 @@
 import { Switch, Route, Link, useLocation } from "wouter";
 import { queryClient } from "./lib/queryClient";
-import { QueryClientProvider } from "@tanstack/react-query";
+import { QueryClientProvider, useQuery } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/not-found";
@@ -59,9 +59,24 @@ function RotatingPill() {
   );
 }
 
+function Banner() {
+  const { data } = useQuery<{ content: string }>({
+    queryKey: ["/api/pages/banner"],
+  });
+
+  if (!data?.content) return null;
+
+  return (
+    <div className="bg-amber-700/15 border-b border-dotted border-amber-600/30 px-4 sm:px-6 py-2 text-center" data-testid="banner">
+      <p className="text-xs text-amber-400 tracking-wider">{data.content}</p>
+    </div>
+  );
+}
+
 function Layout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex flex-col">
+      <Banner />
       <header className="border-b border-dotted border-border px-4 sm:px-6 py-4">
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <Link href="/">

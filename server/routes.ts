@@ -483,7 +483,6 @@ export async function registerRoutes(
         headers: {
           "Content-Type": "application/json",
           "Authorization": `token ${BTCPAY_API_KEY}`,
-          "X-Api-Key": BTCPAY_API_KEY,
           "User-Agent": "SupplementsShop/1.0",
         },
         body: JSON.stringify({

@@ -270,8 +270,15 @@ function PaymentSection({
       const res = await apiRequest("POST", "/api/checkout", body);
       return await res.json();
     },
-    onSuccess: (data: { configured: boolean; checkoutUrl?: string; orderUid: string; message?: string }) => {
-      if (data.configured && data.checkoutUrl) {
+    onSuccess: (data: { configured: boolean; checkoutUrl?: string; orderUid: string; message?: string; paymentFailed?: boolean }) => {
+      if (data.paymentFailed) {
+        clearCart();
+        toast({
+          title: `order ${data.orderUid} saved`,
+          description: data.message || "payment invoice could not be created. please try again shortly.",
+          variant: "destructive",
+        });
+      } else if (data.configured && data.checkoutUrl) {
         clearCart();
         window.open(data.checkoutUrl, "_blank");
         toast({ title: `order ${data.orderUid} created — redirecting to payment` });
@@ -279,7 +286,7 @@ function PaymentSection({
         clearCart();
         toast({
           title: `order ${data.orderUid} created`,
-          description: "btcpay server is not configured yet. set BTCPAY_URL, BTCPAY_API_KEY, and BTCPAY_STORE_ID to enable payment processing.",
+          description: data.message || "payment processing is not configured yet.",
         });
       }
     },

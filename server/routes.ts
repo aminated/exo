@@ -501,7 +501,12 @@ export async function registerRoutes(
       if (!invoiceResponse.ok) {
         const errorText = await invoiceResponse.text();
         console.error("BTCPay invoice creation failed:", errorText);
-        return res.status(502).json({ message: "Failed to create payment invoice" });
+        return res.json({
+          orderUid: order.orderUid,
+          configured: true,
+          paymentFailed: true,
+          message: "your order has been saved, but we couldn't generate a payment invoice right now. please contact us or try again shortly.",
+        });
       }
 
       const invoice = await invoiceResponse.json() as { id: string; checkoutLink?: string };

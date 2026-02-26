@@ -2,19 +2,12 @@ import type { Express, Request, Response, NextFunction } from "express";
 import { createServer, type Server } from "http";
 import crypto from "crypto";
 import path from "path";
+import fs from "fs";
 import multer from "multer";
 import { storage } from "./storage";
 import { insertProductSchema, insertBlogPostSchema, insertTestResultSchema, insertCouponSchema, shippingInfoSchema, serviceInfoSchema } from "@shared/schema";
 
-const uploadDir = path.join(process.cwd(), "uploads");
-const uploadStorage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, uploadDir),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname);
-    cb(null, `${crypto.randomBytes(12).toString("hex")}${ext}`);
-  },
-});
-const upload = multer({ storage: uploadStorage, limits: { fileSize: 10 * 1024 * 1024 } });
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 
 const BTCPAY_URL = process.env.BTCPAY_URL;
 const BTCPAY_API_KEY = process.env.BTCPAY_API_KEY;
@@ -180,7 +173,10 @@ export async function registerRoutes(
     res.json({ success: true });
   });
 
-  app.use("/uploads", (await import("express")).default.static(uploadDir));
+  const uploadDir = path.join(process.cwd(), "uploads");
+  if (fs.existsSync(uploadDir)) {
+    app.use("/uploads", (await import("express")).default.static(uploadDir));
+  }
 
   app.get("/api/results", async (_req, res) => {
     const results = await storage.getTestResults();
@@ -232,8 +228,45 @@ export async function registerRoutes(
     if (!files || files.length === 0) {
       return res.status(400).json({ message: "No files uploaded" });
     }
-    const urls = files.map((f) => `/uploads/${f.filename}`);
+    const urls = files.map((f) => {
+      const mimeType = f.mimetype || "image/png";
+      const base64 = f.buffer.toString("base64");
+      return `data:${mimeType};base64,${base64}`;
+    });
     res.json({ urls });
+  });
+
+  app.post("/api/admin/migrate-images", requireAdmin, async (_req, res) => {
+    try {
+      const results = await storage.getTestResults();
+      let migrated = 0;
+      for (const result of results) {
+        const chromatograms: string[] = JSON.parse(result.chromatograms || "[]");
+        let changed = false;
+        const updated = chromatograms.map((url) => {
+          if (url.startsWith("/uploads/")) {
+            const filePath = path.join(process.cwd(), url);
+            if (fs.existsSync(filePath)) {
+              const fileBuffer = fs.readFileSync(filePath);
+              const ext = path.extname(filePath).toLowerCase();
+              const mimeMap: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".gif": "image/gif", ".webp": "image/webp" };
+              const mimeType = mimeMap[ext] || "image/png";
+              changed = true;
+              return `data:${mimeType};base64,${fileBuffer.toString("base64")}`;
+            }
+          }
+          return url;
+        });
+        if (changed) {
+          await storage.updateTestResult(result.id, { chromatograms: JSON.stringify(updated) });
+          migrated++;
+        }
+      }
+      res.json({ success: true, migrated });
+    } catch (error) {
+      console.error("Migration error:", error);
+      res.status(500).json({ message: "Migration failed" });
+    }
   });
 
   app.get("/api/pages/:slug", async (req, res) => {

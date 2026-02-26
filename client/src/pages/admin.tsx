@@ -643,6 +643,7 @@ function ResultForm({
 }) {
   const { toast } = useToast();
   const existingChromatograms: string[] = result ? JSON.parse(result.chromatograms || "[]") : [];
+  const existingRawFiles: { name: string; data: string }[] = result ? JSON.parse(result.rawDataFiles || "[]") : [];
   const [form, setForm] = useState({
     uid: result?.uid || "",
     orderUid: result?.orderUid || "",
@@ -654,7 +655,9 @@ function ResultForm({
     results: result?.results || "",
   });
   const [chromatograms, setChromatograms] = useState<string[]>(existingChromatograms);
+  const [rawFiles, setRawFiles] = useState<{ name: string; data: string }[]>(existingRawFiles);
   const [uploading, setUploading] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
 
   const mutation = useMutation({
     mutationFn: async (data: typeof form) => {
@@ -668,6 +671,7 @@ function ResultForm({
         manufacturer: data.manufacturer || null,
         results: data.results || null,
         chromatograms: JSON.stringify(chromatograms),
+        rawDataFiles: JSON.stringify(rawFiles),
       };
       if (result) {
         await apiRequest("PATCH", `/api/admin/results/${result.id}`, body);
@@ -717,6 +721,35 @@ function ResultForm({
 
   const removeChromatogram = (index: number) => {
     setChromatograms((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleRawFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    setUploadingFiles(true);
+    try {
+      const formData = new FormData();
+      for (let i = 0; i < files.length; i++) {
+        formData.append("files", files[i]);
+      }
+      const res = await fetch("/api/admin/upload-files", {
+        method: "POST",
+        body: formData,
+        credentials: "include",
+      });
+      if (!res.ok) throw new Error("Upload failed");
+      const data = await res.json();
+      setRawFiles((prev) => [...prev, ...data.files]);
+    } catch {
+      toast({ title: "upload failed", variant: "destructive" });
+    } finally {
+      setUploadingFiles(false);
+      e.target.value = "";
+    }
+  };
+
+  const removeRawFile = (index: number) => {
+    setRawFiles((prev) => prev.filter((_, i) => i !== index));
   };
 
   return (
@@ -787,6 +820,32 @@ function ResultForm({
           <Upload className="h-3.5 w-3.5" />
           {uploading ? "uploading..." : "upload images"}
           <input type="file" multiple accept="image/*" onChange={handleFileUpload} className="hidden" disabled={uploading} data-testid="input-result-upload" />
+        </label>
+      </div>
+      <div>
+        <label className="text-xs text-muted-foreground mb-1 block">raw data files</label>
+        {rawFiles.length > 0 && (
+          <div className="space-y-1.5 mb-3">
+            {rawFiles.map((file, i) => (
+              <div key={i} className="flex items-center gap-2 text-xs border border-dotted border-border rounded-md px-3 py-1.5">
+                <FileText className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                <span className="truncate flex-1 font-mono">{file.name}</span>
+                <button
+                  type="button"
+                  onClick={() => removeRawFile(i)}
+                  className="text-muted-foreground hover:text-white transition-colors"
+                  data-testid={`button-remove-rawfile-${i}`}
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+        <label className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs border border-dotted border-border text-muted-foreground hover:text-foreground cursor-pointer transition-colors">
+          <Upload className="h-3.5 w-3.5" />
+          {uploadingFiles ? "uploading..." : "upload files"}
+          <input type="file" multiple onChange={handleRawFileUpload} className="hidden" disabled={uploadingFiles} data-testid="input-result-rawfile-upload" />
         </label>
       </div>
       <div className="flex gap-2">

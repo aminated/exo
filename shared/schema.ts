@@ -94,6 +94,7 @@ export const testResults = pgTable("test_results", {
   manufacturer: text("manufacturer"),
   results: text("results"),
   chromatograms: text("chromatograms").notNull().default("[]"),
+  rawDataFiles: text("raw_data_files").notNull().default("[]"),
   createdAt: timestamp("created_at").defaultNow(),
 });
 

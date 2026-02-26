@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import { useRoute, Link } from "wouter";
+import { FileText, Download } from "lucide-react";
 import type { TestResult } from "@shared/schema";
 
 export default function ResultDetail() {
@@ -36,6 +37,7 @@ export default function ResultDetail() {
   }
 
   const chromatograms: string[] = JSON.parse(result.chromatograms || "[]");
+  const rawDataFiles: { name: string; data: string }[] = JSON.parse(result.rawDataFiles || "[]");
 
   return (
     <div className="w-full max-w-3xl mx-auto" data-testid="page-result-detail">
@@ -92,6 +94,27 @@ export default function ResultDetail() {
                     alt={`chromatogram ${i + 1}`}
                     className="w-full rounded-md border border-dotted border-border"
                   />
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {rawDataFiles.length > 0 && (
+          <div className="border-t border-dotted border-border pt-4">
+            <h3 className="text-xs font-bold tracking-wider text-amber-400 mb-3">raw data</h3>
+            <div className="space-y-2">
+              {rawDataFiles.map((file, i) => (
+                <a
+                  key={i}
+                  href={file.data}
+                  download={file.name}
+                  className="flex items-center gap-2 text-sm border border-dotted border-border rounded-md px-4 py-2.5 hover:border-amber-400/50 hover:text-amber-400 transition-colors group"
+                  data-testid={`link-rawfile-${i}`}
+                >
+                  <FileText className="h-4 w-4 text-amber-400 shrink-0" />
+                  <span className="truncate flex-1 font-mono">{file.name}</span>
+                  <Download className="h-3.5 w-3.5 text-muted-foreground group-hover:text-amber-400 transition-colors shrink-0" />
                 </a>
               ))}
             </div>

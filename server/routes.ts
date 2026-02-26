@@ -236,6 +236,22 @@ export async function registerRoutes(
     res.json({ urls });
   });
 
+  app.post("/api/admin/upload-files", requireAdmin, upload.array("files", 10), (req, res) => {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      return res.status(400).json({ message: "No files uploaded" });
+    }
+    const result = files.map((f) => {
+      const mimeType = f.mimetype || "application/octet-stream";
+      const base64 = f.buffer.toString("base64");
+      return {
+        name: f.originalname,
+        data: `data:${mimeType};base64,${base64}`,
+      };
+    });
+    res.json({ files: result });
+  });
+
   app.post("/api/admin/migrate-images", requireAdmin, async (_req, res) => {
     try {
       const results = await storage.getTestResults();

@@ -30,7 +30,7 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - `/products` - Product listing with table, quantity controls, payment method selection
 - `/product/:slug` - Individual product detail page with description
 - `/results` - Test results listing (Janoshik-style table)
-- `/results/:uid` - Individual test result detail with chromatograms
+- `/results/:uid` - Individual test result detail with chromatograms and downloadable raw data files
 - `/terms` - Terms of service (editable from admin)
 - `/admin` - Admin portal (password-protected) for managing products, blog posts, results, orders, coupons, and pages
 
@@ -43,7 +43,7 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - Products have category: "product" (physical, needs shipping) or "service" (needs compound + signal/simplex)
 - CRUD for blog posts: create, edit title/slug/content/excerpt/isLocked/lockPassword, delete
 - Locked posts: admin can mark posts as "private entry" with a password
-- CRUD for test results: uid, order uid, testing ordered, sample received, client name, sample, manufacturer, free text results, chromatogram image uploads
+- CRUD for test results: uid, order uid, testing ordered, sample received, client name, sample, manufacturer, free text results, chromatogram image uploads, raw data file uploads
 - Orders tab: view all orders with search (name, email, order ID, product), filter by status/payment method/date range, sort by date/price
 - CRUD for coupons: code, discount type (percentage/fixed), discount value, min order amount, max uses, active toggle
 - Pages tab: site banner (text + enable/disable), terms of service content
@@ -74,7 +74,7 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - `blogPosts` - title, slug, content, excerpt, isLocked, lockPassword, publishedAt
 - `orders` - orderUid (random hex), items (JSON), totalPrice, paymentMethod, shippingInfo (JSON), serviceInfo (JSON), bitcartInvoiceId (stores BTCPay invoice ID), status, createdAt
 - `sitePages` - slug, title, content, updatedAt
-- `testResults` - uid, orderUid, testingOrdered, sampleReceived, clientName, sample, manufacturer, results, chromatograms (JSON array of image URLs), createdAt
+- `testResults` - uid, orderUid, testingOrdered, sampleReceived, clientName, sample, manufacturer, results, chromatograms (JSON array of base64 data URLs), rawDataFiles (JSON array of {name, data} objects with base64 content), createdAt
 - `coupons` - code, discountType, discountValue, minOrderAmount, maxUses, usedCount, isActive, createdAt
 
 ## Project Structure

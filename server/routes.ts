@@ -12,6 +12,7 @@ const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 
 const BTCPAY_URL = process.env.BTCPAY_URL;
 const BTCPAY_API_KEY = process.env.BTCPAY_API_KEY;
 const BTCPAY_STORE_ID = process.env.BTCPAY_STORE_ID;
+const BTCPAY_PROXY_KEY = process.env.BTCPAY_PROXY_KEY;
 
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
@@ -478,14 +479,18 @@ export async function registerRoutes(
         xmr: ["XMR-MoneroLike"],
       };
 
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        "Authorization": `token ${BTCPAY_API_KEY}`,
+        "User-Agent": "SupplementsShop/1.0",
+      };
+      if (BTCPAY_PROXY_KEY) {
+        headers["X-Api-Key"] = BTCPAY_PROXY_KEY;
+      }
+
       const invoiceResponse = await fetch(`${BTCPAY_URL}/api/v1/stores/${BTCPAY_STORE_ID}/invoices`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `token ${BTCPAY_API_KEY}`,
-          "X-Api-Key": BTCPAY_API_KEY,
-          "User-Agent": "SupplementsShop/1.0",
-        },
+        headers,
         body: JSON.stringify({
           amount: computedTotal,
           currency: "USD",

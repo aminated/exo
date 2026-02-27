@@ -13,7 +13,28 @@ import Terms from "@/pages/terms";
 import Results from "@/pages/results";
 import ResultDetail from "@/pages/result-detail";
 import Checkout from "@/pages/checkout";
-import { Package, Pen, FlaskConical } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Package, Pen, FlaskConical, Accessibility } from "lucide-react";
+
+function useAccessibleMode() {
+  const [accessible, setAccessible] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("accessible-mode") === "true";
+    }
+    return false;
+  });
+
+  useEffect(() => {
+    if (accessible) {
+      document.documentElement.classList.add("accessible");
+    } else {
+      document.documentElement.classList.remove("accessible");
+    }
+    localStorage.setItem("accessible-mode", String(accessible));
+  }, [accessible]);
+
+  return { accessible, toggle: () => setAccessible((v) => !v) };
+}
 
 function NavLink({
   href,
@@ -75,6 +96,8 @@ function Banner() {
 }
 
 function Layout({ children }: { children: React.ReactNode }) {
+  const { accessible, toggle } = useAccessibleMode();
+
   return (
     <div className="min-h-screen flex flex-col">
       <Banner />
@@ -88,20 +111,34 @@ function Layout({ children }: { children: React.ReactNode }) {
               "supplements"
             </h1>
           </Link>
-          <nav className="flex items-center gap-2" data-testid="nav-main">
-            <NavLink href="/" matchPrefix="/musings">
-              <Pen className="h-3.5 w-3.5" />
-              musings
-            </NavLink>
-            <NavLink href="/products" matchPrefix="/product">
-              <Package className="h-3.5 w-3.5" />
-              products
-            </NavLink>
-            <NavLink href="/results" matchPrefix="/results">
-              <FlaskConical className="h-3.5 w-3.5" />
-              results
-            </NavLink>
-          </nav>
+          <div className="flex items-center gap-2">
+            <nav className="flex items-center gap-2" data-testid="nav-main">
+              <NavLink href="/" matchPrefix="/musings">
+                <Pen className="h-3.5 w-3.5" />
+                musings
+              </NavLink>
+              <NavLink href="/products" matchPrefix="/product">
+                <Package className="h-3.5 w-3.5" />
+                products
+              </NavLink>
+              <NavLink href="/results" matchPrefix="/results">
+                <FlaskConical className="h-3.5 w-3.5" />
+                results
+              </NavLink>
+            </nav>
+            <button
+              onClick={toggle}
+              className={`p-1.5 rounded-md transition-colors border ${
+                accessible
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "text-muted-foreground hover:text-foreground border-transparent hover:border-border"
+              }`}
+              title={accessible ? "switch to stylized mode" : "switch to accessibility mode"}
+              data-testid="button-accessibility-toggle"
+            >
+              <Accessibility className="h-3.5 w-3.5" />
+            </button>
+          </div>
         </div>
       </header>
 

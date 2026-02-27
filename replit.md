@@ -31,6 +31,7 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - `/product/:slug` - Individual product detail page with description
 - `/results` - Test results listing (Janoshik-style table)
 - `/results/:uid` - Individual test result detail with chromatograms and downloadable raw data files
+- `/checkout/:invoiceId` - Custom payment page with dotted QR codes, address, amount, countdown timer
 - `/terms` - Terms of service (editable from admin)
 - `/admin` - Admin portal (password-protected) for managing products, blog posts, results, orders, coupons, and pages
 

@@ -1,5 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { Link } from "wouter";
+import { Link, useLocation } from "wouter";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, Loader2, Tag } from "lucide-react";
@@ -196,6 +196,7 @@ function PaymentSection({
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount: number; discountType: string; discountValue: string } | null>(null);
   const [couponError, setCouponError] = useState("");
   const { toast } = useToast();
+  const [, navigate] = useLocation();
 
   const totalItems = Object.values(cart).reduce((a, b) => a + b, 0);
   const totalPrice = products
@@ -270,7 +271,7 @@ function PaymentSection({
       const res = await apiRequest("POST", "/api/checkout", body);
       return await res.json();
     },
-    onSuccess: (data: { configured: boolean; checkoutUrl?: string; orderUid: string; message?: string; paymentFailed?: boolean }) => {
+    onSuccess: (data: { configured: boolean; checkoutUrl?: string; invoiceId?: string; orderUid: string; message?: string; paymentFailed?: boolean }) => {
       if (data.paymentFailed) {
         clearCart();
         toast({
@@ -278,10 +279,9 @@ function PaymentSection({
           description: data.message || "payment invoice could not be created. please try again shortly.",
           variant: "destructive",
         });
-      } else if (data.configured && data.checkoutUrl) {
+      } else if (data.configured && data.invoiceId) {
         clearCart();
-        window.open(data.checkoutUrl, "_blank");
-        toast({ title: `order ${data.orderUid} created — redirecting to payment` });
+        navigate(`/checkout/${data.invoiceId}`);
       } else {
         clearCart();
         toast({

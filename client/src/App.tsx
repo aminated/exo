@@ -12,6 +12,7 @@ import Admin from "@/pages/admin";
 import Terms from "@/pages/terms";
 import Results from "@/pages/results";
 import ResultDetail from "@/pages/result-detail";
+import Checkout from "@/pages/checkout";
 import { Package, Pen, FlaskConical } from "lucide-react";
 
 function NavLink({
@@ -138,6 +139,7 @@ function Router() {
         <Route path="/product/:slug" component={ProductDetail} />
         <Route path="/results" component={Results} />
         <Route path="/results/:uid" component={ResultDetail} />
+        <Route path="/checkout/:invoiceId" component={Checkout} />
         <Route path="/terms" component={Terms} />
         <Route path="/admin" component={Admin} />
         <Route component={NotFound} />

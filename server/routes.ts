@@ -531,5 +531,59 @@ export async function registerRoutes(
     }
   });
 
+  app.get("/api/invoice/:invoiceId", async (req, res) => {
+    try {
+      if (!BTCPAY_URL || !BTCPAY_API_KEY || !BTCPAY_STORE_ID) {
+        return res.status(503).json({ message: "Payment system not configured" });
+      }
+
+      const headers: Record<string, string> = {
+        "Authorization": `token ${BTCPAY_API_KEY}`,
+        "User-Agent": "SupplementsShop/1.0",
+      };
+      if (BTCPAY_PROXY_KEY) {
+        headers["X-Api-Key"] = BTCPAY_PROXY_KEY;
+      }
+
+      const [invoiceRes, methodsRes] = await Promise.all([
+        fetch(`${BTCPAY_URL}/api/v1/stores/${BTCPAY_STORE_ID}/invoices/${req.params.invoiceId}`, { headers }),
+        fetch(`${BTCPAY_URL}/api/v1/stores/${BTCPAY_STORE_ID}/invoices/${req.params.invoiceId}/payment-methods`, { headers }),
+      ]);
+
+      if (!invoiceRes.ok || !methodsRes.ok) {
+        return res.status(404).json({ message: "Invoice not found" });
+      }
+
+      const invoice = await invoiceRes.json() as Record<string, unknown>;
+      const methods = await methodsRes.json() as Array<{
+        paymentMethodId: string;
+        destination: string;
+        amount: string;
+        rate: number;
+        paymentLink?: string;
+      }>;
+
+      res.json({
+        id: invoice.id,
+        amount: invoice.amount,
+        currency: invoice.currency,
+        status: invoice.status,
+        expirationTime: invoice.expirationTime,
+        createdTime: invoice.createdTime,
+        metadata: invoice.metadata,
+        paymentMethods: methods.map((m) => ({
+          paymentMethodId: m.paymentMethodId,
+          destination: m.destination,
+          amount: m.amount,
+          rate: m.rate,
+          paymentLink: m.paymentLink,
+        })),
+      });
+    } catch (error) {
+      console.error("Invoice fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch invoice" });
+    }
+  });
+
   return httpServer;
 }

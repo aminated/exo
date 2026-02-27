@@ -14,7 +14,7 @@ import Results from "@/pages/results";
 import ResultDetail from "@/pages/result-detail";
 import Checkout from "@/pages/checkout";
 import { useState, useEffect } from "react";
-import { Package, Pen, FlaskConical, Accessibility } from "lucide-react";
+import { Package, Pen, FlaskConical, Sun, Moon } from "lucide-react";
 
 function useAccessibleMode() {
   const [accessible, setAccessible] = useState(() => {
@@ -136,7 +136,7 @@ function Layout({ children }: { children: React.ReactNode }) {
               title={accessible ? "switch to stylized mode" : "switch to accessibility mode"}
               data-testid="button-accessibility-toggle"
             >
-              <Accessibility className="h-3.5 w-3.5" />
+              {accessible ? <Sun className="h-3.5 w-3.5" /> : <Moon className="h-3.5 w-3.5" />}
             </button>
           </div>
         </div>

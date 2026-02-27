@@ -14,6 +14,18 @@ const BTCPAY_API_KEY = process.env.BTCPAY_API_KEY;
 const BTCPAY_STORE_ID = process.env.BTCPAY_STORE_ID;
 const BTCPAY_PROXY_KEY = process.env.BTCPAY_PROXY_KEY;
 
+async function fetchWithRetry(url: string, options: RequestInit, retries = 3): Promise<Response> {
+  for (let i = 0; i < retries; i++) {
+    try {
+      return await fetch(url, options);
+    } catch (err) {
+      if (i === retries - 1) throw err;
+      await new Promise((r) => setTimeout(r, 500 * (i + 1)));
+    }
+  }
+  throw new Error("fetch failed after retries");
+}
+
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME;
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
@@ -488,7 +500,7 @@ export async function registerRoutes(
         headers["X-Api-Key"] = BTCPAY_PROXY_KEY;
       }
 
-      const invoiceResponse = await fetch(`${BTCPAY_URL}/api/v1/stores/${BTCPAY_STORE_ID}/invoices`, {
+      const invoiceResponse = await fetchWithRetry(`${BTCPAY_URL}/api/v1/stores/${BTCPAY_STORE_ID}/invoices`, {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -546,8 +558,8 @@ export async function registerRoutes(
       }
 
       const [invoiceRes, methodsRes] = await Promise.all([
-        fetch(`${BTCPAY_URL}/api/v1/stores/${BTCPAY_STORE_ID}/invoices/${req.params.invoiceId}`, { headers }),
-        fetch(`${BTCPAY_URL}/api/v1/stores/${BTCPAY_STORE_ID}/invoices/${req.params.invoiceId}/payment-methods`, { headers }),
+        fetchWithRetry(`${BTCPAY_URL}/api/v1/stores/${BTCPAY_STORE_ID}/invoices/${req.params.invoiceId}`, { headers }),
+        fetchWithRetry(`${BTCPAY_URL}/api/v1/stores/${BTCPAY_STORE_ID}/invoices/${req.params.invoiceId}/payment-methods`, { headers }),
       ]);
 
       if (!invoiceRes.ok || !methodsRes.ok) {

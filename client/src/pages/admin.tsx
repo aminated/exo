@@ -1635,7 +1635,7 @@ function DashboardManager() {
         <StatCard
           icon={<DollarSign className="h-4 w-4" />}
           label="revenue"
-          value={`$${data.revenue.toFixed(2)}`}
+          value={`$${(data.revenue ?? 0).toFixed(2)}`}
           sub="paid only"
         />
         <StatCard

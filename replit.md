@@ -17,6 +17,7 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - 2026-02-25: Coupon system added with admin CRUD and checkout integration
 - 2026-02-25: Switched from BitCart to BTCPay Server for crypto payment processing
 - 2026-02-25: Admin orders tab with search, filtering, and sorting
+- 2026-02-27: Rate limiting added (express-rate-limit) with strict/moderate/general tiers
 
 ## Architecture
 - **Frontend**: React + Vite + TailwindCSS + shadcn/ui with black background, bold Doto font, gold accents

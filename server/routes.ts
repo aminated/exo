@@ -4,6 +4,7 @@ import crypto from "crypto";
 import path from "path";
 import fs from "fs";
 import multer from "multer";
+import rateLimit from "express-rate-limit";
 import { storage } from "./storage";
 import { insertProductSchema, insertBlogPostSchema, insertTestResultSchema, insertCouponSchema, shippingInfoSchema, serviceInfoSchema } from "@shared/schema";
 
@@ -39,10 +40,38 @@ function requireAdmin(req: Request, res: Response, next: NextFunction) {
   res.status(401).json({ message: "Unauthorized" });
 }
 
+const rateLimitMessage = { message: "too many requests, please try again later" };
+
+const generalLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 100,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: rateLimitMessage,
+});
+
+const strictLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: rateLimitMessage,
+});
+
+const moderateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 30,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: rateLimitMessage,
+});
+
 export async function registerRoutes(
   httpServer: Server,
   app: Express
 ): Promise<Server> {
+  app.use("/api/", generalLimiter);
+
   app.get("/api/products", async (_req, res) => {
     const allProducts = await storage.getProducts();
     const visible = allProducts.filter((p) => !p.isHidden);
@@ -75,7 +104,7 @@ export async function registerRoutes(
     res.json(rest);
   });
 
-  app.post("/api/posts/:slug/unlock", async (req, res) => {
+  app.post("/api/posts/:slug/unlock", moderateLimiter, async (req, res) => {
     const post = await storage.getBlogPostBySlug(req.params.slug);
     if (!post) {
       return res.status(404).json({ message: "Post not found" });
@@ -92,7 +121,7 @@ export async function registerRoutes(
     res.json(rest);
   });
 
-  app.post("/api/admin/login", (req, res) => {
+  app.post("/api/admin/login", strictLimiter, (req, res) => {
     const { username, password } = req.body;
     if (!ADMIN_USERNAME || !ADMIN_PASSWORD) {
       return res.status(503).json({ message: "Admin login is not configured" });
@@ -354,7 +383,7 @@ export async function registerRoutes(
     res.json({ success: true });
   });
 
-  app.post("/api/coupons/validate", async (req, res) => {
+  app.post("/api/coupons/validate", strictLimiter, async (req, res) => {
     const { code, subtotal } = req.body;
     if (!code || typeof code !== "string") {
       return res.status(400).json({ message: "Coupon code is required" });
@@ -385,7 +414,7 @@ export async function registerRoutes(
     });
   });
 
-  app.post("/api/checkout", async (req, res) => {
+  app.post("/api/checkout", strictLimiter, async (req, res) => {
     try {
       const { items, paymentMethod, shippingInfo, serviceInfo, couponCode } = req.body;
 
@@ -542,7 +571,7 @@ export async function registerRoutes(
     }
   });
 
-  app.get("/api/invoice/:invoiceId", async (req, res) => {
+  app.get("/api/invoice/:invoiceId", moderateLimiter, async (req, res) => {
     try {
       if (!BTCPAY_URL || !BTCPAY_API_KEY || !BTCPAY_STORE_ID) {
         return res.status(503).json({ message: "Payment system not configured" });

@@ -354,13 +354,13 @@ export async function registerRoutes(
     const allProducts = await storage.getProducts();
 
     const totalOrders = allOrders.length;
-    const totalRevenue = allOrders.reduce((sum, o) => sum + Number(o.totalPrice), 0);
-    const paidOrders = allOrders.filter((o) => o.status === "paid" || o.status === "complete" || o.status === "settled");
+    const paidStatuses = ["paid", "complete", "settled"];
+    const paidOrders = allOrders.filter((o) => paidStatuses.includes(o.status));
     const paidRevenue = paidOrders.reduce((sum, o) => sum + Number(o.totalPrice), 0);
     const pendingOrders = allOrders.filter((o) => o.status === "pending").length;
 
     const paymentBreakdown: Record<string, { count: number; revenue: number }> = {};
-    allOrders.forEach((o) => {
+    paidOrders.forEach((o) => {
       const method = o.paymentMethod || "unknown";
       if (!paymentBreakdown[method]) paymentBreakdown[method] = { count: 0, revenue: 0 };
       paymentBreakdown[method].count++;
@@ -368,7 +368,7 @@ export async function registerRoutes(
     });
 
     const productSales: Record<string, { name: string; quantity: number; revenue: number }> = {};
-    allOrders.forEach((o) => {
+    paidOrders.forEach((o) => {
       try {
         const items = JSON.parse(o.items) as Array<{ productId: number; name: string; quantity: number; unitPrice: string }>;
         items.forEach((item) => {
@@ -385,7 +385,7 @@ export async function registerRoutes(
       .slice(0, 10);
 
     const dailyOrders: Record<string, { count: number; revenue: number }> = {};
-    allOrders.forEach((o) => {
+    paidOrders.forEach((o) => {
       const day = o.createdAt ? new Date(o.createdAt).toISOString().split("T")[0] : "unknown";
       if (!dailyOrders[day]) dailyOrders[day] = { count: 0, revenue: 0 };
       dailyOrders[day].count++;
@@ -399,8 +399,7 @@ export async function registerRoutes(
 
     res.json({
       totalOrders,
-      totalRevenue: Math.round(totalRevenue * 100) / 100,
-      paidRevenue: Math.round(paidRevenue * 100) / 100,
+      revenue: Math.round(paidRevenue * 100) / 100,
       paidOrders: paidOrders.length,
       pendingOrders,
       totalProducts: allProducts.length,

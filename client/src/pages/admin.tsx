@@ -1596,8 +1596,7 @@ function PagesManager() {
 
 interface AnalyticsData {
   totalOrders: number;
-  totalRevenue: number;
-  paidRevenue: number;
+  revenue: number;
   paidOrders: number;
   pendingOrders: number;
   totalProducts: number;
@@ -1631,23 +1630,24 @@ function DashboardManager() {
           icon={<ShoppingCart className="h-4 w-4" />}
           label="total orders"
           value={String(data.totalOrders)}
+          sub={`${data.paidOrders} paid`}
         />
         <StatCard
           icon={<DollarSign className="h-4 w-4" />}
-          label="total revenue"
-          value={`$${data.totalRevenue.toFixed(2)}`}
-        />
-        <StatCard
-          icon={<TrendingUp className="h-4 w-4" />}
-          label="paid revenue"
-          value={`$${data.paidRevenue.toFixed(2)}`}
-          sub={`${data.paidOrders} paid`}
+          label="revenue"
+          value={`$${data.revenue.toFixed(2)}`}
+          sub="paid only"
         />
         <StatCard
           icon={<Activity className="h-4 w-4" />}
           label="pending"
           value={String(data.pendingOrders)}
-          sub={`${data.inStockProducts}/${data.totalProducts} in stock`}
+        />
+        <StatCard
+          icon={<Package className="h-4 w-4" />}
+          label="products"
+          value={`${data.inStockProducts}/${data.totalProducts}`}
+          sub="in stock"
         />
       </div>
 

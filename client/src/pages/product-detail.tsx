@@ -1,11 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { useParams, Link } from "wouter";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Minus, Plus, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Product } from "@shared/schema";
+import { useCart } from "@/lib/cart";
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
+  const { cart, addToCart, removeFromCart } = useCart();
 
   const { data: product, isLoading } = useQuery<Product>({
     queryKey: ["/api/products", slug],
@@ -26,7 +28,7 @@ export default function ProductDetail() {
     return (
       <div className="w-full max-w-3xl mx-auto text-center py-16">
         <p className="text-muted-foreground mb-4">product not found.</p>
-        <Link href="/">
+        <Link href="/products">
           <Button variant="secondary" className="gap-2">
             <ArrowLeft className="h-4 w-4" />
             back to products
@@ -36,9 +38,11 @@ export default function ProductDetail() {
     );
   }
 
+  const qty = product ? (cart[product.id] || 0) : 0;
+
   return (
     <div className="w-full max-w-3xl mx-auto" data-testid="section-product-detail">
-      <Link href="/">
+      <Link href="/products">
         <Button variant="ghost" className="gap-2 mb-6 -ml-2 text-muted-foreground" data-testid="button-back">
           <ArrowLeft className="h-4 w-4" />
           back to products
@@ -87,6 +91,50 @@ export default function ProductDetail() {
           </div>
         </div>
       )}
+
+      <div className="mt-6 border border-dotted border-border rounded-md p-5 bg-amber-700/15" data-testid="section-add-to-cart">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+          <div className="flex items-center gap-3">
+            <Button
+              size="icon"
+              variant="secondary"
+              onClick={() => removeFromCart(product.id)}
+              disabled={!product.inStock || qty === 0}
+              className="h-9 w-9 border border-dotted border-border"
+              data-testid="button-detail-minus"
+            >
+              <Minus className="h-4 w-4" />
+            </Button>
+            <span
+              className="w-10 text-center font-mono text-lg tabular-nums"
+              data-testid="text-detail-qty"
+            >
+              {qty}
+            </span>
+            <Button
+              size="icon"
+              variant="secondary"
+              onClick={() => addToCart(product.id)}
+              disabled={!product.inStock}
+              className="h-9 w-9 border border-dotted border-border"
+              data-testid="button-detail-plus"
+            >
+              <Plus className="h-4 w-4" />
+            </Button>
+          </div>
+          <Link href="/products">
+            <Button
+              variant="default"
+              disabled={!product.inStock || qty === 0}
+              className="gap-2 bg-white text-black hover:bg-neutral-200 border border-dotted border-white/40"
+              data-testid="button-view-cart"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              {qty > 0 ? `view cart (${qty})` : product.inStock ? "add to cart" : "out of stock"}
+            </Button>
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

@@ -1,30 +1,60 @@
-import { useState, useCallback } from "react";
+import { useSyncExternalStore, useCallback } from "react";
+
+type Cart = Record<number, number>;
+type Listener = () => void;
+
+let cart: Cart = {};
+const listeners = new Set<Listener>();
+
+function emitChange() {
+  listeners.forEach((l) => l());
+}
+
+function getSnapshot(): Cart {
+  return cart;
+}
+
+function subscribe(listener: Listener) {
+  listeners.add(listener);
+  return () => listeners.delete(listener);
+}
+
+function addToCartGlobal(productId: number) {
+  cart = { ...cart, [productId]: (cart[productId] || 0) + 1 };
+  emitChange();
+}
+
+function removeFromCartGlobal(productId: number) {
+  const current = cart[productId] || 0;
+  if (current <= 1) {
+    const next = { ...cart };
+    delete next[productId];
+    cart = next;
+  } else {
+    cart = { ...cart, [productId]: current - 1 };
+  }
+  emitChange();
+}
+
+function clearCartGlobal() {
+  cart = {};
+  emitChange();
+}
 
 export function useCart() {
-  const [cart, setCart] = useState<Record<number, number>>({});
+  const currentCart = useSyncExternalStore(subscribe, getSnapshot, getSnapshot);
 
   const addToCart = useCallback((productId: number) => {
-    setCart((prev) => ({
-      ...prev,
-      [productId]: (prev[productId] || 0) + 1,
-    }));
+    addToCartGlobal(productId);
   }, []);
 
   const removeFromCart = useCallback((productId: number) => {
-    setCart((prev) => {
-      const current = prev[productId] || 0;
-      if (current <= 1) {
-        const next = { ...prev };
-        delete next[productId];
-        return next;
-      }
-      return { ...prev, [productId]: current - 1 };
-    });
+    removeFromCartGlobal(productId);
   }, []);
 
   const clearCart = useCallback(() => {
-    setCart({});
+    clearCartGlobal();
   }, []);
 
-  return { cart, addToCart, removeFromCart, clearCart };
+  return { cart: currentCart, addToCart, removeFromCart, clearCart };
 }

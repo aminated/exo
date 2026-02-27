@@ -39,7 +39,9 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 ## Admin Portal
 - Password-based auth using express-session with PostgreSQL session store
 - ADMIN_USERNAME + ADMIN_PASSWORD env vars required for login
-- Tabs: products, blog posts, results, orders, coupons, pages
+- Tabs: dashboard, products, blog posts, results, orders, coupons, pages
+- Dashboard tab: analytics overview with total orders, revenue (total/paid), pending orders, payment method breakdown, top products by revenue, daily revenue bar chart (last 30 days)
+- Admin panel renders at 100% zoom (counteracts the site's 135% zoom)
 - CRUD for products: create, edit name/slug/concentration/type/price/description/inStock/isHidden/category, delete
 - Products can be toggled hidden (eye icon) to hide from public listing
 - Products have category: "product" (physical, needs shipping) or "service" (needs compound + signal/simplex)

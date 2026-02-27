@@ -231,4 +231,8 @@
     border-style: dashed !important;
     border-width: 2px;
   }
+
+  .admin-panel {
+    zoom: calc(1 / 1.35);
+  }
 }

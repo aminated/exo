@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
-import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock, EyeOff, Eye, FileText, FlaskConical, Upload, X, Tag, ShoppingCart, ChevronDown, ChevronUp, Search } from "lucide-react";
+import { LogOut, Plus, Pencil, Trash2, Package, Pen, Lock, EyeOff, Eye, FileText, FlaskConical, Upload, X, Tag, ShoppingCart, ChevronDown, ChevronUp, Search, BarChart3, DollarSign, TrendingUp, Activity } from "lucide-react";
 import type { Product, BlogPost, TestResult, Coupon, Order } from "@shared/schema";
 
 function AdminLogin({ onLogin }: { onLogin: () => void }) {
@@ -1594,8 +1594,155 @@ function PagesManager() {
   );
 }
 
+interface AnalyticsData {
+  totalOrders: number;
+  totalRevenue: number;
+  paidRevenue: number;
+  paidOrders: number;
+  pendingOrders: number;
+  totalProducts: number;
+  inStockProducts: number;
+  paymentBreakdown: Record<string, { count: number; revenue: number }>;
+  topProducts: Array<{ name: string; quantity: number; revenue: number }>;
+  recentDays: Array<{ date: string; count: number; revenue: number }>;
+}
+
+function DashboardManager() {
+  const { data, isLoading } = useQuery<AnalyticsData>({
+    queryKey: ["/api/admin/analytics"],
+  });
+
+  if (isLoading || !data) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div key={i} className="h-24 bg-muted/30 animate-pulse rounded-md" />
+        ))}
+      </div>
+    );
+  }
+
+  const maxDailyRevenue = Math.max(...data.recentDays.map((d) => d.revenue), 1);
+
+  return (
+    <div className="space-y-6" data-testid="section-dashboard">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <StatCard
+          icon={<ShoppingCart className="h-4 w-4" />}
+          label="total orders"
+          value={String(data.totalOrders)}
+        />
+        <StatCard
+          icon={<DollarSign className="h-4 w-4" />}
+          label="total revenue"
+          value={`$${data.totalRevenue.toFixed(2)}`}
+        />
+        <StatCard
+          icon={<TrendingUp className="h-4 w-4" />}
+          label="paid revenue"
+          value={`$${data.paidRevenue.toFixed(2)}`}
+          sub={`${data.paidOrders} paid`}
+        />
+        <StatCard
+          icon={<Activity className="h-4 w-4" />}
+          label="pending"
+          value={String(data.pendingOrders)}
+          sub={`${data.inStockProducts}/${data.totalProducts} in stock`}
+        />
+      </div>
+
+      <div className="border border-dotted border-border rounded-md p-4 bg-card/40">
+        <h3 className="text-xs font-semibold tracking-wider text-muted-foreground mb-3">
+          payment methods
+        </h3>
+        <div className="space-y-2">
+          {Object.entries(data.paymentBreakdown).map(([method, info]) => (
+            <div key={method} className="flex items-center justify-between text-sm" data-testid={`stat-payment-${method}`}>
+              <span className="text-amber-400 font-mono">{method}</span>
+              <div className="flex items-center gap-4">
+                <span className="text-muted-foreground text-xs">{info.count} orders</span>
+                <span className="font-mono">${info.revenue.toFixed(2)}</span>
+              </div>
+            </div>
+          ))}
+          {Object.keys(data.paymentBreakdown).length === 0 && (
+            <p className="text-xs text-muted-foreground">no orders yet</p>
+          )}
+        </div>
+      </div>
+
+      <div className="border border-dotted border-border rounded-md p-4 bg-card/40">
+        <h3 className="text-xs font-semibold tracking-wider text-muted-foreground mb-3">
+          top products
+        </h3>
+        <div className="space-y-2">
+          {data.topProducts.map((product, i) => (
+            <div key={i} className="flex items-center justify-between text-sm" data-testid={`stat-product-${i}`}>
+              <span className="truncate mr-4">{product.name}</span>
+              <div className="flex items-center gap-4 shrink-0">
+                <span className="text-muted-foreground text-xs">{product.quantity} sold</span>
+                <span className="font-mono">${product.revenue.toFixed(2)}</span>
+              </div>
+            </div>
+          ))}
+          {data.topProducts.length === 0 && (
+            <p className="text-xs text-muted-foreground">no sales yet</p>
+          )}
+        </div>
+      </div>
+
+      {data.recentDays.length > 0 && (
+        <div className="border border-dotted border-border rounded-md p-4 bg-card/40">
+          <h3 className="text-xs font-semibold tracking-wider text-muted-foreground mb-3">
+            daily revenue (last 30 days)
+          </h3>
+          <div className="flex items-end gap-1 h-32" data-testid="chart-daily-revenue">
+            {data.recentDays.map((day) => {
+              const height = Math.max((day.revenue / maxDailyRevenue) * 100, 4);
+              return (
+                <div
+                  key={day.date}
+                  className="flex-1 group relative"
+                  title={`${day.date}: $${day.revenue.toFixed(2)} (${day.count} orders)`}
+                >
+                  <div
+                    className="w-full bg-amber-400/60 rounded-t-sm border border-dotted border-amber-600/30 hover:bg-amber-400/80 transition-colors"
+                    style={{ height: `${height}%` }}
+                  />
+                  <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 hidden group-hover:block bg-card border border-dotted border-border rounded px-2 py-1 text-xs whitespace-nowrap z-10">
+                    <div className="text-amber-400">{day.date}</div>
+                    <div className="font-mono">${day.revenue.toFixed(2)}</div>
+                    <div className="text-muted-foreground">{day.count} orders</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex justify-between mt-1 text-xs text-muted-foreground">
+            <span>{data.recentDays[0]?.date}</span>
+            <span>{data.recentDays[data.recentDays.length - 1]?.date}</span>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function StatCard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: string; sub?: string }) {
+  return (
+    <div className="border border-dotted border-border rounded-md p-3 bg-card/40">
+      <div className="flex items-center gap-1.5 text-muted-foreground mb-1">
+        {icon}
+        <span className="text-xs tracking-wider">{label}</span>
+      </div>
+      <div className="text-lg font-mono font-bold">{value}</div>
+      {sub && <div className="text-xs text-muted-foreground mt-0.5">{sub}</div>}
+    </div>
+  );
+}
+
 export default function Admin() {
-  const [tab, setTab] = useState<"products" | "posts" | "results" | "orders" | "coupons" | "pages">("products");
+  const [tab, setTab] = useState<"dashboard" | "products" | "posts" | "results" | "orders" | "coupons" | "pages">("dashboard");
 
   const { data: authData, isLoading: authLoading } = useQuery<{ isAdmin: boolean }>({
     queryKey: ["/api/admin/check"],
@@ -1627,7 +1774,7 @@ export default function Admin() {
   }
 
   return (
-    <div className="w-full max-w-3xl mx-auto">
+    <div className="w-full max-w-5xl mx-auto admin-panel">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-bold tracking-wider text-amber-400" data-testid="text-admin-heading">
           admin panel
@@ -1646,7 +1793,19 @@ export default function Admin() {
 
       <div className="glow-line w-full mb-6" />
 
-      <div className="flex gap-2 mb-6">
+      <div className="flex flex-wrap gap-2 mb-6">
+        <button
+          onClick={() => setTab("dashboard")}
+          className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs tracking-wider transition-colors border ${
+            tab === "dashboard"
+              ? "bg-amber-700/15 text-amber-400 border-dotted border-amber-600/30"
+              : "text-muted-foreground border-dotted border-border hover:text-foreground"
+          }`}
+          data-testid="tab-dashboard"
+        >
+          <BarChart3 className="h-3.5 w-3.5" />
+          dashboard
+        </button>
         <button
           onClick={() => setTab("products")}
           className={`flex items-center gap-1.5 px-4 py-2 rounded-md text-xs tracking-wider transition-colors border ${
@@ -1721,6 +1880,7 @@ export default function Admin() {
         </button>
       </div>
 
+      {tab === "dashboard" && <DashboardManager />}
       {tab === "products" && <ProductsManager />}
       {tab === "posts" && <PostsManager />}
       {tab === "results" && <ResultsManager />}

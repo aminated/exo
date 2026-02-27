@@ -349,6 +349,68 @@ export async function registerRoutes(
     res.json(allOrders);
   });
 
+  app.get("/api/admin/analytics", requireAdmin, async (_req, res) => {
+    const allOrders = await storage.getOrders();
+    const allProducts = await storage.getProducts();
+
+    const totalOrders = allOrders.length;
+    const totalRevenue = allOrders.reduce((sum, o) => sum + Number(o.totalPrice), 0);
+    const paidOrders = allOrders.filter((o) => o.status === "paid" || o.status === "complete" || o.status === "settled");
+    const paidRevenue = paidOrders.reduce((sum, o) => sum + Number(o.totalPrice), 0);
+    const pendingOrders = allOrders.filter((o) => o.status === "pending").length;
+
+    const paymentBreakdown: Record<string, { count: number; revenue: number }> = {};
+    allOrders.forEach((o) => {
+      const method = o.paymentMethod || "unknown";
+      if (!paymentBreakdown[method]) paymentBreakdown[method] = { count: 0, revenue: 0 };
+      paymentBreakdown[method].count++;
+      paymentBreakdown[method].revenue += Number(o.totalPrice);
+    });
+
+    const productSales: Record<string, { name: string; quantity: number; revenue: number }> = {};
+    allOrders.forEach((o) => {
+      try {
+        const items = JSON.parse(o.items) as Array<{ productId: number; name: string; quantity: number; unitPrice: string }>;
+        items.forEach((item) => {
+          const key = String(item.productId);
+          if (!productSales[key]) productSales[key] = { name: item.name, quantity: 0, revenue: 0 };
+          productSales[key].quantity += item.quantity;
+          productSales[key].revenue += Number(item.unitPrice) * item.quantity;
+        });
+      } catch {}
+    });
+
+    const topProducts = Object.values(productSales)
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
+
+    const dailyOrders: Record<string, { count: number; revenue: number }> = {};
+    allOrders.forEach((o) => {
+      const day = o.createdAt ? new Date(o.createdAt).toISOString().split("T")[0] : "unknown";
+      if (!dailyOrders[day]) dailyOrders[day] = { count: 0, revenue: 0 };
+      dailyOrders[day].count++;
+      dailyOrders[day].revenue += Number(o.totalPrice);
+    });
+
+    const recentDays = Object.entries(dailyOrders)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .slice(0, 30)
+      .reverse();
+
+    res.json({
+      totalOrders,
+      totalRevenue: Math.round(totalRevenue * 100) / 100,
+      paidRevenue: Math.round(paidRevenue * 100) / 100,
+      paidOrders: paidOrders.length,
+      pendingOrders,
+      totalProducts: allProducts.length,
+      inStockProducts: allProducts.filter((p) => p.inStock).length,
+      paymentBreakdown,
+      topProducts,
+      recentDays: recentDays.map(([date, data]) => ({ date, ...data })),
+    });
+  });
+
   app.get("/api/admin/coupons", requireAdmin, async (_req, res) => {
     const allCoupons = await storage.getCoupons();
     res.json(allCoupons);

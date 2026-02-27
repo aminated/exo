@@ -534,7 +534,6 @@ export async function registerRoutes(
       res.json({
         orderUid: order.orderUid,
         invoiceId: invoice.id,
-        checkoutUrl: invoice.checkoutLink || `${BTCPAY_URL}/i/${invoice.id}`,
         configured: true,
       });
     } catch (error) {

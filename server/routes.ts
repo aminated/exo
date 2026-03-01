@@ -80,7 +80,7 @@ export async function registerRoutes(
 
   app.get("/api/products/:slug", async (req, res) => {
     const product = await storage.getProductBySlug(req.params.slug);
-    if (!product) {
+    if (!product || product.isHidden) {
       return res.status(404).json({ message: "Product not found" });
     }
     res.json(product);
@@ -127,8 +127,15 @@ export async function registerRoutes(
       return res.status(503).json({ message: "Admin login is not configured" });
     }
     if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-      (req.session as any).isAdmin = true;
-      res.json({ success: true });
+      req.session.regenerate((err) => {
+        if (err) {
+          return res.status(500).json({ message: "Session error" });
+        }
+        (req.session as any).isAdmin = true;
+        req.session.save(() => {
+          res.json({ success: true });
+        });
+      });
     } else {
       res.status(401).json({ message: "Invalid credentials" });
     }
@@ -634,6 +641,10 @@ export async function registerRoutes(
 
   app.get("/api/invoice/:invoiceId", moderateLimiter, async (req, res) => {
     try {
+      if (!/^[a-zA-Z0-9_-]{1,64}$/.test(req.params.invoiceId)) {
+        return res.status(400).json({ message: "Invalid invoice ID" });
+      }
+
       if (!BTCPAY_URL || !BTCPAY_API_KEY || !BTCPAY_STORE_ID) {
         return res.status(503).json({ message: "Payment system not configured" });
       }

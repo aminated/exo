@@ -3,6 +3,20 @@ import { useRoute, Link } from "wouter";
 import { FileText, Download } from "lucide-react";
 import type { TestResult } from "@shared/schema";
 
+function isSafeUrl(url: string): boolean {
+  const trimmed = url.trim().toLowerCase();
+  if (trimmed.startsWith("data:")) {
+    return /^data:image\/(png|jpeg|jpg|gif|webp|svg\+xml);base64,/.test(trimmed) ||
+           /^data:application\/(pdf|octet-stream|zip);base64,/.test(trimmed);
+  }
+  return (
+    trimmed.startsWith("https://") ||
+    trimmed.startsWith("http://") ||
+    trimmed.startsWith("/uploads/") ||
+    (trimmed.startsWith("/") && !trimmed.startsWith("//"))
+  );
+}
+
 export default function ResultDetail() {
   const [, params] = useRoute("/results/:uid");
   const uid = params?.uid;
@@ -87,7 +101,7 @@ export default function ResultDetail() {
           <div className="border-t border-dotted border-border pt-4">
             <h3 className="text-xs font-bold tracking-wider text-amber-400 mb-3">chromatograms</h3>
             <div className="grid grid-cols-1 gap-4">
-              {chromatograms.map((url, i) => (
+              {chromatograms.filter(isSafeUrl).map((url, i) => (
                 <a key={i} href={url} target="_blank" rel="noopener noreferrer" data-testid={`img-chromatogram-${i}`}>
                   <img
                     src={url}
@@ -104,7 +118,7 @@ export default function ResultDetail() {
           <div className="border-t border-dotted border-border pt-4">
             <h3 className="text-xs font-bold tracking-wider text-amber-400 mb-3">raw data</h3>
             <div className="space-y-2">
-              {rawDataFiles.map((file, i) => (
+              {rawDataFiles.filter((f) => isSafeUrl(f.data)).map((file, i) => (
                 <a
                   key={i}
                   href={file.data}

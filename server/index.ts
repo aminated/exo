@@ -25,6 +25,21 @@ app.use(
 
 app.use(express.urlencoded({ extended: false }));
 
+app.use((_req, res, next) => {
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  res.setHeader("X-Frame-Options", "DENY");
+  res.setHeader("Referrer-Policy", "strict-origin-when-cross-origin");
+  next();
+});
+
+app.use((req, res, next) => {
+  if (req.path.startsWith("/api/admin")) {
+    res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, private");
+    res.setHeader("Pragma", "no-cache");
+  }
+  next();
+});
+
 const PgSession = connectPgSimple(session);
 app.use(
   session({
@@ -38,7 +53,7 @@ app.use(
     cookie: {
       maxAge: 8 * 60 * 60 * 1000,
       httpOnly: true,
-      secure: false,
+      secure: process.env.NODE_ENV === "production",
       sameSite: "lax",
     },
   }),

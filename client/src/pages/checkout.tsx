@@ -187,11 +187,17 @@ function StatusBadge({ status }: { status: string }) {
 export default function Checkout() {
   const [, params] = useRoute("/checkout/:invoiceId");
   const invoiceId = params?.invoiceId;
+  const orderUid = new URLSearchParams(window.location.search).get("order") || "";
   const [selectedMethod, setSelectedMethod] = useState(0);
 
   const { data: invoice, isLoading, error } = useQuery<InvoiceData>({
-    queryKey: [`/api/invoice/${invoiceId}`],
-    enabled: !!invoiceId,
+    queryKey: ["/api/invoice", invoiceId, orderUid],
+    queryFn: async () => {
+      const res = await fetch(`/api/invoice/${invoiceId}?orderUid=${encodeURIComponent(orderUid)}`);
+      if (!res.ok) throw new Error("Invoice not found");
+      return res.json();
+    },
+    enabled: !!invoiceId && !!orderUid,
     refetchInterval: 15000,
   });
 

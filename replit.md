@@ -20,6 +20,7 @@ A supplement e-commerce site inspired by inject.soy. Features a product catalog 
 - 2026-02-27: Rate limiting added (express-rate-limit) with strict/moderate/general tiers
 - 2026-02-27: Accessibility mode toggle added - switches from stylized dark theme to clean light theme
 - 2026-03-01: Security hardening: hidden product access fix, SSRF prevention on invoice endpoint, XSS URL validation on test results, session fixation fix, session timeout reduced to 8h
+- 2026-03-01: Additional hardening: secure cookie in production, security headers (X-Content-Type-Options, X-Frame-Options, Referrer-Policy), Cache-Control on admin routes, invoice endpoint ownership verification via orderUid
 
 ## Architecture
 - **Frontend**: React + Vite + TailwindCSS + shadcn/ui with black background, bold Doto font, gold accents

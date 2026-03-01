@@ -281,7 +281,7 @@ function PaymentSection({
         });
       } else if (data.configured && data.invoiceId) {
         clearCart();
-        navigate(`/checkout/${data.invoiceId}`);
+        navigate(`/checkout/${data.invoiceId}?order=${data.orderUid}`);
       } else {
         clearCart();
         toast({

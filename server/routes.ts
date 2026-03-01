@@ -645,6 +645,16 @@ export async function registerRoutes(
         return res.status(400).json({ message: "Invalid invoice ID" });
       }
 
+      const orderUid = req.query.orderUid as string;
+      if (!orderUid || typeof orderUid !== "string") {
+        return res.status(403).json({ message: "Order verification required" });
+      }
+
+      const order = await storage.getOrderByInvoiceId(req.params.invoiceId);
+      if (!order || order.orderUid !== orderUid) {
+        return res.status(403).json({ message: "Invoice access denied" });
+      }
+
       if (!BTCPAY_URL || !BTCPAY_API_KEY || !BTCPAY_STORE_ID) {
         return res.status(503).json({ message: "Payment system not configured" });
       }

@@ -105,10 +105,10 @@ function Layout({ children }: { children: React.ReactNode }) {
         <div className="max-w-4xl mx-auto flex items-center justify-between gap-4 flex-wrap">
           <Link href="/">
             <h1
-              className="text-base font-bold tracking-widest text-amber-400 hover:text-amber-300 transition-colors cursor-pointer"
+              className="text-base font-bold tracking-widest text-amber-400 hover:text-amber-300 transition-colors cursor-pointer leading-tight"
               data-testid="link-logo"
             >
-              "supplements"
+              exogenous<br />fun
             </h1>
           </Link>
           <div className="flex items-center gap-2">
@@ -154,7 +154,7 @@ function Layout({ children }: { children: React.ReactNode }) {
             <span className="text-amber-400 font-bold text-lg">"</span>
           </div>
           <div className="text-xs text-muted-foreground/50 flex items-center gap-2">
-            <span>in god we trust. all others must bring data.</span>
+            <span>anonymous analytical one stop shop.</span>
             <span>·</span>
             <Link href="/terms" className="hover:text-muted-foreground transition-colors underline underline-offset-2" data-testid="link-terms">
               terms

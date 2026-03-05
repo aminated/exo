@@ -591,7 +591,7 @@ export async function registerRoutes(
       const headers: Record<string, string> = {
         "Content-Type": "application/json",
         "Authorization": `token ${BTCPAY_API_KEY}`,
-        "User-Agent": "SupplementsShop/1.0",
+        "User-Agent": "ExogenousFun/1.0",
       };
       if (BTCPAY_PROXY_KEY) {
         headers["X-Api-Key"] = BTCPAY_PROXY_KEY;
@@ -661,7 +661,7 @@ export async function registerRoutes(
 
       const headers: Record<string, string> = {
         "Authorization": `token ${BTCPAY_API_KEY}`,
-        "User-Agent": "SupplementsShop/1.0",
+        "User-Agent": "ExogenousFun/1.0",
       };
       if (BTCPAY_PROXY_KEY) {
         headers["X-Api-Key"] = BTCPAY_PROXY_KEY;
